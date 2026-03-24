@@ -22,6 +22,12 @@ enum Role {
   SECRETARY
 }
 
+enum ActiveStatus {
+  SUSPENDED
+  PENDING
+  ACTIVE
+}
+
 enum QueueStatus {
   WAITING_FOR_VITALS
   READY_FOR_DOCTOR
@@ -47,14 +53,14 @@ enum Sex {
 // ============================================================
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
+  id           String       @id @default(uuid())
+  email        String       @unique
   passwordHash String
   firstName    String
   lastName     String
   role         Role
-  isActive     Boolean    @default(true)
-  deletedAt    DateTime?  // Soft delete
+  status       ActiveStatus @default(PENDING)
+  deletedAt    DateTime?    // Soft delete
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

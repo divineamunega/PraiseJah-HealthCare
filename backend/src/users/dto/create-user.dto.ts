@@ -4,11 +4,9 @@ export class CreateUserDto {
   @IsString()
   readonly firstName!: string;
 
-
   @IsNotEmpty()
   @IsString()
   readonly lastName!: string;
-
 
   @IsNotEmpty()
   @IsEmail()
