@@ -1,0 +1,45 @@
+services:
+  emr_db:
+    image: postgres:16-alpine
+    container_name: emr_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - emr_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $POSTGRES_USER -d $POSTGRES_DB']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - emr_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: emr_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - '127.0.0.1:${PGADMIN_PORT:-5050}:80'
+    depends_on:
+      emr_db:
+        condition: service_healthy
+    networks:
+      - emr_network
+
+volumes:
+  emr_pgdata:
+    driver: local
+
+networks:
+  emr_network:
+    driver: bridge

@@ -1,0 +1,269 @@
+// ============================================================
+//  EMR Prisma Schema — Production Ready
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+//  ENUMS
+// ============================================================
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+  SECRETARY
+}
+
+enum QueueStatus {
+  WAITING_FOR_VITALS
+  READY_FOR_DOCTOR
+  ASSIGNED
+  IN_PROGRESS
+  DONE
+}
+
+enum VisitStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ============================================================
+//  USER
+// ============================================================
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role
+  isActive     Boolean    @default(true)
+  deletedAt    DateTime?  // Soft delete
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  auditLogs    AuditLog[]
+  visits       Visit[]    @relation("VisitDoctor")
+  queueEntries QueueEntry[]
+
+  @@map("users")
+  @@index([role])
+}
+
+// ============================================================
+//  PATIENT
+// ============================================================
+
+model Patient {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime
+  sex         Sex
+  phone       String?
+  address     String?
+  deletedAt   DateTime?  // Soft delete
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  visits      Visit[]
+
+  @@map("patients")
+  @@index([firstName, lastName, dateOfBirth])
+}
+
+// ============================================================
+//  VISIT
+// ============================================================
+
+model Visit {
+  id          String      @id @default(uuid())
+  patientId   String
+  doctorId    String?
+  status      VisitStatus @default(CREATED)
+  deletedAt   DateTime?   // Soft delete
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  doctor        User?          @relation("VisitDoctor", fields: [doctorId], references: [id], onDelete: SetNull)
+  queueEntry    QueueEntry?
+  vitals        Vital[]
+  clinicalNotes ClinicalNote[]
+  diagnoses     Diagnosis[]
+  prescriptions Prescription[]
+  labOrders     LabOrder[]
+
+  @@map("visits")
+  @@index([patientId, createdAt])
+  @@index([doctorId])
+  @@index([status])
+}
+
+// ============================================================
+//  QUEUE ENTRY
+// ============================================================
+
+model QueueEntry {
+  id        String      @id @default(uuid())
+  visitId   String      @unique
+  userId    String?     // Nurse or Doctor who last acted
+  status    QueueStatus @default(WAITING_FOR_VITALS)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  visit     Visit       @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("queue_entries")
+  @@index([status])
+}
+
+// ============================================================
+//  VITAL
+// ============================================================
+
+model Vital {
+  id                 String   @id @default(uuid())
+  visitId            String
+  recordedById       String?
+  systolicBP         Int?
+  diastolicBP        Int?
+  heartRate          Int?
+  respiratoryRate    Int?
+  temperatureCelsius Decimal? @db.Decimal(4, 1)
+  weightKg           Decimal? @db.Decimal(5, 2)
+  heightCm           Decimal? @db.Decimal(5, 2)
+  recordedAt         DateTime @default(now())
+  deletedAt          DateTime?  // Soft delete
+
+  // Relations
+  visit              Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("vitals")
+  @@index([visitId])
+}
+
+// ============================================================
+//  CLINICAL NOTE
+// ============================================================
+
+model ClinicalNote {
+  id          String   @id @default(uuid())
+  visitId     String
+  authorId    String?  // Doctor
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?  // Soft delete
+
+  // Relations
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("clinical_notes")
+  @@index([visitId])
+}
+
+// ============================================================
+//  DIAGNOSIS
+// ============================================================
+
+model Diagnosis {
+  id          String   @id @default(uuid())
+  visitId     String
+  authorId    String?
+  code        String?  // ICD-10 code
+  description String
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?  // Soft delete
+
+  // Relations
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("diagnoses")
+  @@index([visitId])
+}
+
+// ============================================================
+//  PRESCRIPTION
+// ============================================================
+
+model Prescription {
+  id           String   @id @default(uuid())
+  visitId      String
+  prescriberId String?
+  medication   String
+  dosage       String
+  frequency    String
+  duration     String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  deletedAt    DateTime?  // Soft delete
+
+  // Relations
+  visit        Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("prescriptions")
+  @@index([visitId])
+}
+
+// ============================================================
+//  LAB ORDER
+// ============================================================
+
+model LabOrder {
+  id          String   @id @default(uuid())
+  visitId     String
+  orderedById String?
+  testName    String
+  notes       String?
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?  // Soft delete
+
+  // Relations
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("lab_orders")
+  @@index([visitId])
+}
+
+// ============================================================
+//  AUDIT LOG
+// ============================================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String   // e.g. "CREATE_VISIT"
+  entity     String
+  entityId   String?
+  metadata   Json?    // extra context
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([entity, entityId])
+}
