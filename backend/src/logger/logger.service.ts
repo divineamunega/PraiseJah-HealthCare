@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import winston from 'winston';
 
-const logger = winston.createLogger()
+const logger = winston.createLogger();
 @Injectable()
 export class LoggerService {
   private logger: winston.Logger;
@@ -12,11 +12,9 @@ export class LoggerService {
       format: winston.format.json(),
       transports: [
         new winston.transports.Console(),
-        new winston.transports.File({ filename: 'combined.log' })
-      ]
-    })
-
-
+        new winston.transports.File({ filename: 'combined.log' }),
+      ],
+    });
   }
 
   info(msg: string, meta?: any) {

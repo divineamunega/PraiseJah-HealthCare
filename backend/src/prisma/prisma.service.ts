@@ -9,23 +9,25 @@ const adapter = new PrismaPg({ connectionString });
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy {
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor(private readonly logger: LoggerService) {
-    super({ adapter })
+    super({ adapter });
   }
   async onModuleInit() {
     try {
       await this.$connect();
-      this.logger.info("Prisma Connected to the database.")
-
+      this.logger.info('Prisma Connected to the database.');
     } catch (err) {
-      this.logger.error("An error occured while connecting to the database.", err)
+      this.logger.error(
+        'An error occured while connecting to the database.',
+        err,
+      );
     }
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
-    this.logger.info("Prisma Disconnected from the database.")
-
+    this.logger.info('Prisma Disconnected from the database.');
   }
 }

@@ -5,4 +5,4 @@ import { LoggerModule } from '../logger/logger.module.js';
   imports: [LoggerModule],
   providers: [PrismaService],
 })
-export class PrismaModule { }
+export class PrismaModule {}

@@ -33,7 +33,7 @@ describe('PrismaService', () => {
   });
 
   it('should connect to the database on module init', async () => {
-    // Note: spying on the prototype or the instance works, 
+    // Note: spying on the prototype or the instance works,
     // but ensure $connect exists on the service (PrismaClient)
     const connectSpy = jest
       .spyOn(service, '$connect')
@@ -43,7 +43,7 @@ describe('PrismaService', () => {
 
     expect(connectSpy).toHaveBeenCalled();
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Connected')
+      expect.stringContaining('Connected'),
     );
   });
 
@@ -53,10 +53,7 @@ describe('PrismaService', () => {
 
     await service.onModuleInit();
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.any(String),
-      error
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.any(String), error);
   });
 
   it('should disconnect from the database on module destroy', async () => {
@@ -68,7 +65,7 @@ describe('PrismaService', () => {
 
     expect(disconnectSpy).toHaveBeenCalled();
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Disconnected')
+      expect.stringContaining('Disconnected'),
     );
   });
 });
