@@ -1,37 +1,46 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Role } from '@prisma/client';
+import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { RoleCreationMap } from './constants/role.constants.js';
+import { generateTempPassword } from '../common/utils/password.util.js';
+import { handlePrismaUniqueError } from '../prisma/prisma.helpers.js';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async create(dto: CreateUserDto) {
-    // 1. Check if the user exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+  async create(dto: CreateUserDto, creator: User) {
 
-    if (existingUser) {
-      throw new BadRequestException('Email Already Exists');
+
+    // 1. Making sure only allowed users can create users
+    const allowedRoles = RoleCreationMap[creator.role];
+    if (!allowedRoles.includes(dto.role)) {
+      throw new ForbiddenException(`User with role ${creator.role} is not allowed to create ${dto.role}.`)
     }
 
-    // 2. Hash the password
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    // 2. Generate a random password and hash it
+    const tempPassword = generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        role: Role.ADMIN,
-        email: dto.email,
-        passwordHash,
-      },
-    });
+    // 3. Create The user
 
-    // 2. If user not exists create new user
-    // const user = await this.prisma.user.create({ data: { email: data.email, firstName: data.firstName, lastName: data.lastName, } })
+    try {
+      return await this.prisma.user.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          role: dto.role,
+          email: dto.email,
+          passwordHash,
+        },
+      });
+    } catch (err) {
+      handlePrismaUniqueError(err, 'email');
+      throw err;
+    }
+
+    // 4. Send the welcome and change password email
   }
 }
