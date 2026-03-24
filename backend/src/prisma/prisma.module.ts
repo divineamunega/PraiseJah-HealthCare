@@ -4,5 +4,6 @@ import { LoggerModule } from '../logger/logger.module.js';
 @Module({
   imports: [LoggerModule],
   providers: [PrismaService],
+  exports: [PrismaService],
 })
-export class PrismaModule {}
+export class PrismaModule { }
