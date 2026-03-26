@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -12,12 +12,12 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(dto: CreateUserDto, creator: User) {
-
-
     // 1. Making sure only allowed users can create users
     const allowedRoles = RoleCreationMap[creator.role];
     if (!allowedRoles.includes(dto.role)) {
-      throw new ForbiddenException(`User with role ${creator.role} is not allowed to create ${dto.role}.`)
+      throw new ForbiddenException(
+        `User with role ${creator.role} is not allowed to create ${dto.role}.`,
+      );
     }
 
     // 2. Generate a random password and hash it
