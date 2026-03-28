@@ -1,37 +1,40 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from './users.service';
-import {
-  describe,
-  beforeEach,
-  it,
-  expect,
-  jest,
-  afterEach
-} from '@jest/globals';
-import { handlePrismaUniqueError } from '../prisma/prisma.helpers';
-import { Prisma, Role } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { RoleCreationMap } from './constants/role.constants';
-import { ForbiddenException } from '@nestjs/common';
-import { generateTempPassword } from '../common/utils/password.util';
-import bcrypt from "bcrypt";
+import { jest, describe, beforeEach, it, expect, afterEach } from '@jest/globals';
 
-jest.mock('bcrypt');
-jest.mock('../common/utils/password.util');
-jest.mock('../prisma/prisma.helpers');
+const mockGenerateTempPassword = jest.fn<() => string>();
+const mockHash = jest.fn<(data: string, rounds: number) => Promise<string>>();
+const mockHandlePrismaUniqueError = jest.fn();
 
-const mockedBcryptHash = bcrypt.hash as any;
-const mockedGenerateTempPassword = generateTempPassword as unknown as jest.Mock;
+await jest.unstable_mockModule('../common/utils/password.util.js', () => ({
+  generateTempPassword: mockGenerateTempPassword,
+}));
+
+await jest.unstable_mockModule('bcrypt', () => ({
+  default: {
+    hash: mockHash,
+    compare: jest.fn(),
+  }
+}));
+
+await jest.unstable_mockModule('../prisma/prisma.helpers.js', () => ({
+  handlePrismaUniqueError: mockHandlePrismaUniqueError,
+}));
+
+const { UsersService } = await import('./users.service.js');
+const { PrismaService } = await import('../prisma/prisma.service.js');
+const { ForbiddenException } = await import('@nestjs/common');
+const { Role } = await import('@prisma/client');
+const { Test } = await import('@nestjs/testing');
 
 describe('UsersService', () => {
-  let service: UsersService;
-  let prisma: { user: { create: jest.Mock } };
+  let service: InstanceType<typeof UsersService>;
+  let prisma: { user: { create: jest.Mock<any> } };
 
   beforeEach(async () => {
     prisma = {
-      user: { create: jest.fn() },
+      user: { create: jest.fn<any>() },
     };
-    const module: TestingModule = await Test.createTestingModule({
+
+    const module = await Test.createTestingModule({
       providers: [
         UsersService,
         {
@@ -41,55 +44,114 @@ describe('UsersService', () => {
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
+    service = module.get(UsersService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-
-
-  describe("Create", function () {
-    it("should throw Forbidden Exception when creator Role cannot create target role", async function () {
+  describe('create', () => {
+    it('should throw ForbiddenException when creator role cannot create target role', async () => {
       const creator = { role: Role.ADMIN, id: 1 } as any;
       const dto = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
         role: Role.SUPER_ADMIN,
-      }
-      await expect(service.create(dto, creator)).rejects.toThrow(ForbiddenException)
-    })
+      };
 
-    it("should hash the password", async function () {
+      await expect(service.create(dto, creator)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should hash the password', async () => {
       const creator = { role: Role.ADMIN, id: 1 } as any;
       const dto = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
         role: Role.SECRETARY,
       };
 
-      mockedGenerateTempPassword.mockReturnValue('temppassword')
-      mockedBcryptHash.mockResolvedValue('hashedpassword');
+      mockGenerateTempPassword.mockReturnValue('temppassword');
+      mockHash.mockResolvedValue('hashedpassword');
+      prisma.user.create.mockResolvedValue({ id: 1 });
+
       await service.create(dto, creator);
-      expect(bcrypt.hash).toHaveBeenCalledWith(expect.any(String), 10);
-    })
-  })
-  // it('should create a new user', async function () {
-  //   const creator = { role: "ADMIN", id: 1 } as any;
-  //   const dto = {
-  //     firstName: 'John',
-  //     lastName: 'Doe',
-  //     email: "john.doe@example.com"
-  //   };
-  // });
 
+      expect(mockHash).toHaveBeenCalledWith('temppassword', 10);
+    });
 
-  afterEach(function () {
-    jest.clearAllMocks();
+    it('should call prisma.user.create with hashed password and never plaintext', async () => {
+      const creator = { role: Role.ADMIN, id: 1 } as any;
+      const dto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        role: Role.SECRETARY,
+      };
+
+      mockGenerateTempPassword.mockReturnValue('temppassword');
+      mockHash.mockResolvedValue('hashedpassword');
+      prisma.user.create.mockResolvedValue({ id: 1 });
+
+      await service.create(dto, creator);
+
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          role: dto.role,
+          email: dto.email,
+          passwordHash: 'hashedpassword',
+        },
+      });
+
+      const callArg = (prisma.user.create as jest.Mock).mock.calls[0][0];
+      expect(JSON.stringify(callArg)).not.toContain('temppassword');
+    });
+
+    it('should return the created user', async () => {
+      const creator = { role: Role.ADMIN, id: 1 } as any;
+      const dto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        role: Role.SECRETARY,
+      };
+
+      const createdUser = { id: 1, ...dto, passwordHash: 'hashedpassword' };
+
+      mockGenerateTempPassword.mockReturnValue('temppassword');
+      mockHash.mockResolvedValue('hashedpassword');
+      prisma.user.create.mockResolvedValue(createdUser);
+
+      const result = await service.create(dto, creator);
+
+      expect(result).toEqual(createdUser);
+    });
+
+    it('should call handlePrismaUniqueError when prisma throws a unique constraint error', async () => {
+      const creator = { role: Role.ADMIN, id: 1 } as any;
+      const dto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'duplicate@example.com',
+        role: Role.SECRETARY,
+      };
+
+      const prismaError = new Error('Unique constraint failed');
+      mockGenerateTempPassword.mockReturnValue('temppassword');
+      mockHash.mockResolvedValue('hashedpassword');
+      prisma.user.create.mockRejectedValue(prismaError);
+
+      await expect(service.create(dto, creator)).rejects.toThrow();
+
+      expect(mockHandlePrismaUniqueError).toHaveBeenCalledWith(prismaError, 'email');
+    });
   });
-
 });
-

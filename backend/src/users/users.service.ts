@@ -42,5 +42,6 @@ export class UsersService {
     }
 
     // 4. Send the welcome and change password email
+
   }
 }
