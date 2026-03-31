@@ -153,5 +153,8 @@ describe('UsersService', () => {
 
       expect(mockHandlePrismaUniqueError).toHaveBeenCalledWith(prismaError, 'email');
     });
+
+    it('should send a welcome email', async () => { })
+    it('should send the temp password email', async () => { })
   });
 });

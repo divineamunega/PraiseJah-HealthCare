@@ -36,8 +36,27 @@ services:
     networks:
       - emr_network
 
+  emr_redis:
+    image: redis:7-alpine
+    container_name: emr_redis
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - emr_redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - emr_network
+
 volumes:
   emr_pgdata:
+    driver: local
+  emr_redisdata:
     driver: local
 
 networks:
