@@ -44,7 +44,7 @@ describe('MailService', () => {
     it('should send a welcome email with the correct arguments', async () => {
       mockSendMail.mockResolvedValue({ data: {}, error: null });
 
-      await service.sendWelcomeEmail('user@example.com', 'tempPassword123');
+      await service.sendWelcomeEmail('divine', 'user@example.com', 'tempPassword123');
 
       expect(mockSendMail).toHaveBeenCalledWith({
         from: expect.any(String),
@@ -58,7 +58,7 @@ describe('MailService', () => {
       mockSendMail.mockResolvedValue({ data: null, error: { message: 'An error occurred' } });
 
       await expect(
-        service.sendWelcomeEmail('user@example.com', 'tempPassword123')
+        service.sendWelcomeEmail('divine', 'user@example.com', 'tempPassword123')
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

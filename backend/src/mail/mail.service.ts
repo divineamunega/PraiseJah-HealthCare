@@ -7,12 +7,20 @@ export class MailService {
   constructor(private readonly resend: Resend) { }
 
 
-  async sendWelcomeEmail(email: string, tempPassword: string) {
+  async sendWelcomeEmail(name: string, email: string, tempPassword: string) {
     await this.resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM,
       to: [email],
-      subject: "hello world",
-      html: "<strong>it works!</strong>",
+      subject: "Welcome To PraiseJah",
+      template: {
+        id: 'order-confirmation',
+        variables: {
+          TEMPPASSWORD: tempPassword,
+          NAME: name,
+        },
+      }
     })
   }
+
+
 }
