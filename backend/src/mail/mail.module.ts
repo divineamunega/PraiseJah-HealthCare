@@ -1,11 +1,15 @@
 import { Module, Res } from '@nestjs/common';
 import { MailService } from './mail.service.js';
 import { Resend } from 'resend';
+
+console.log(process.env.RESEND_API_KEY)
 @Module({
-  providers: [MailService, {
-    provide: Resend,
-    useFactory: () => new Resend(process.env.RESEND_API_KEY)
-  }],
+  providers: [MailService,
+    {
+      provide: Resend,
+      useFactory: () => new Resend(process.env.RESEND_API_KEY)
+    }
+  ],
 
   exports: [MailService]
 })
