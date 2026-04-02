@@ -8,11 +8,16 @@ import { MailModule } from './mail/mail.module.js';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { configDotenv } from 'dotenv';
+import { RouterModule } from '@nestjs/core';
 
 configDotenv()
 
 @Module({
   imports: [
+    RouterModule.register([{
+      path: 'users',
+      module: UsersModule
+    }]),
     PrismaModule,
     LoggerModule,
     UsersModule,
