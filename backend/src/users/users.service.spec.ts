@@ -1,4 +1,11 @@
-import { jest, describe, beforeEach, it, expect, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  it,
+  expect,
+  afterEach,
+} from '@jest/globals';
 
 const mockGenerateTempPassword = jest.fn<() => string>();
 const mockHash = jest.fn<(data: string, rounds: number) => Promise<string>>();
@@ -12,7 +19,7 @@ await jest.unstable_mockModule('bcrypt', () => ({
   default: {
     hash: mockHash,
     compare: jest.fn(),
-  }
+  },
 }));
 
 await jest.unstable_mockModule('../prisma/prisma.helpers.js', () => ({
@@ -65,7 +72,9 @@ describe('UsersService', () => {
         role: Role.SUPER_ADMIN,
       };
 
-      await expect(service.create(dto, creator)).rejects.toThrow(ForbiddenException);
+      await expect(service.create(dto, creator)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should hash the password', async () => {
@@ -151,10 +160,13 @@ describe('UsersService', () => {
 
       await expect(service.create(dto, creator)).rejects.toThrow();
 
-      expect(mockHandlePrismaUniqueError).toHaveBeenCalledWith(prismaError, 'email');
+      expect(mockHandlePrismaUniqueError).toHaveBeenCalledWith(
+        prismaError,
+        'email',
+      );
     });
 
-    it('should send a welcome email', async () => { })
-    it('should send the temp password email', async () => { })
+    it('should send a welcome email', async () => {});
+    it('should send the temp password email', async () => {});
   });
 });

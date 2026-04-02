@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -6,10 +10,17 @@ import { CreateUserDto } from './dto/create-user.dto.js';
 import { RoleCreationMap } from './constants/role.constants.js';
 import { generateTempPassword } from '../common/utils/password.util.js';
 import { handlePrismaUniqueError } from '../prisma/prisma.helpers.js';
+import { WelcomeMailService } from '../mail/welcome-mail.service.js';
+import { LoggerService } from '../logger/logger.service.js';
+
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly welcomeMailService: WelcomeMailService,
+    private readonly logger: LoggerService
+  ) { }
 
   async create(dto: CreateUserDto, creator: User) {
     // 1. Making sure only allowed users can create users
@@ -25,9 +36,9 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(tempPassword, 10);
 
     // 3. Create The user
-
+    let user: User;
     try {
-      return await this.prisma.user.create({
+      user = await this.prisma.user.create({
         data: {
           firstName: dto.firstName,
           lastName: dto.lastName,
@@ -42,6 +53,13 @@ export class UsersService {
     }
 
     // 4. Send the welcome and change password email
-
+    this.welcomeMailService.addWelcomeEmailJob({
+      email: user.email,
+      name: user.firstName,
+      tempPassword,
+    }).catch(() => {
+      this.logger.error(`Failed to queue welcome email for ${user.email}:`);
+    });
+    return user;
   }
 }

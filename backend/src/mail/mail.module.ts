@@ -1,16 +1,28 @@
 import { Module, Res } from '@nestjs/common';
 import { MailService } from './mail.service.js';
 import { Resend } from 'resend';
+import { ConfigService, ConfigModule } from '@nestjs/config';
+import { LoggerService } from '../logger/logger.service.js';
+import { LoggerModule } from '../logger/logger.module.js';
 
-console.log(process.env.RESEND_API_KEY)
 @Module({
-  providers: [MailService,
+  imports: [ConfigModule, LoggerModule],
+  providers: [
+    MailService,
     {
       provide: Resend,
-      useFactory: () => new Resend(process.env.RESEND_API_KEY)
-    }
+      useFactory: (
+        configService: ConfigService,
+        loggerService: LoggerService,
+      ) => {
+        const apiKey = configService.get<string>('RESEND_API_KEY');
+        const resendClient = new Resend(apiKey);
+        loggerService.info('Resend Client Initialized Successfully');
+        return resendClient;
+      },
+      inject: [ConfigService, LoggerService],
+    },
   ],
-
-  exports: [MailService]
+  exports: [MailService],
 })
-export class MailModule { }
+export class MailModule {}

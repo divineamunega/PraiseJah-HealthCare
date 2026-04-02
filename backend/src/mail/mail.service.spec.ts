@@ -1,4 +1,11 @@
-import { jest, describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+} from '@jest/globals';
 import { InternalServerErrorException } from '@nestjs/common';
 
 const mockSendMail = jest.fn<(options: any) => any>();
@@ -6,9 +13,9 @@ const mockSendMail = jest.fn<(options: any) => any>();
 await jest.unstable_mockModule('resend', () => ({
   Resend: jest.fn().mockImplementation(() => ({
     emails: {
-      send: mockSendMail
-    }
-  }))
+      send: mockSendMail,
+    },
+  })),
 }));
 
 const { MailService } = await import('./mail.service.js');
@@ -44,7 +51,11 @@ describe('MailService', () => {
     it('should send a welcome email with the correct arguments', async () => {
       mockSendMail.mockResolvedValue({ data: {}, error: null });
 
-      await service.sendWelcomeEmail('divine', 'user@example.com', 'tempPassword123');
+      await service.sendWelcomeEmail(
+        'divine',
+        'user@example.com',
+        'tempPassword123',
+      );
 
       expect(mockSendMail).toHaveBeenCalledWith({
         from: expect.any(String),
@@ -55,10 +66,17 @@ describe('MailService', () => {
     });
 
     it('should throw InternalServerErrorException when resend returns an error', async () => {
-      mockSendMail.mockResolvedValue({ data: null, error: { message: 'An error occurred' } });
+      mockSendMail.mockResolvedValue({
+        data: null,
+        error: { message: 'An error occurred' },
+      });
 
       await expect(
-        service.sendWelcomeEmail('divine', 'user@example.com', 'tempPassword123')
+        service.sendWelcomeEmail(
+          'divine',
+          'user@example.com',
+          'tempPassword123',
+        ),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });
