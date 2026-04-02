@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { User } from '@prisma/client';
@@ -13,14 +14,13 @@ import { handlePrismaUniqueError } from '../prisma/prisma.helpers.js';
 import { WelcomeMailService } from '../mail/welcome-mail.service.js';
 import { LoggerService } from '../logger/logger.service.js';
 
-
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly welcomeMailService: WelcomeMailService,
-    private readonly logger: LoggerService
-  ) { }
+    private readonly logger: LoggerService,
+  ) {}
 
   async create(dto: CreateUserDto, creator: User) {
     // 1. Making sure only allowed users can create users
@@ -53,13 +53,27 @@ export class UsersService {
     }
 
     // 4. Send the welcome and change password email
-    this.welcomeMailService.addWelcomeEmailJob({
-      email: user.email,
-      name: user.firstName,
-      tempPassword,
-    }).catch(() => {
-      this.logger.error(`Failed to queue welcome email for ${user.email}:`);
-    });
+    this.welcomeMailService
+      .addWelcomeEmailJob({
+        email: user.email,
+        name: user.firstName,
+        tempPassword,
+      })
+      .catch(() => {
+        this.logger.error(`Failed to queue welcome email for ${user.email}:`);
+      });
     return user;
+  }
+
+  async findUniqueByEmail(email: string) {
+    try {
+      const user = await this.prisma.user.findUniqueOrThrow({
+        where: { email },
+      });
+      return user;
+    } catch (err: any) {
+      if (err.code === 'P2025') throw new NotFoundException('User not found');
+      throw new BadRequestException('Failed to query user by email');
+    }
   }
 }

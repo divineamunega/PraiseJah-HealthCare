@@ -10,4 +10,4 @@ import { RouterModule } from '@nestjs/core';
   imports: [PrismaModule, WelcomeMailModule, LoggerModule],
   exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}
