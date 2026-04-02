@@ -13,7 +13,6 @@ export class MailService {
 
   async sendWelcomeEmail(name: string, email: string, tempPassword: string) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
-    console.log('From Email:', fromEmail);
     if (!fromEmail) {
       throw new Error('EMAIL_FROM is not configured');
     }
