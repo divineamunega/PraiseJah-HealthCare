@@ -48,6 +48,18 @@ enum Sex {
   OTHER
 }
 
+enum AuditTargetType {
+  USER
+  PATIENT
+  VISIT
+  VITAL
+  CLINICAL_NOTE
+  DIAGNOSIS
+  PRESCRIPTION
+  LAB_ORDER
+  QUEUE_ENTRY
+}
+
 // ============================================================
 //  USER
 // ============================================================
@@ -60,17 +72,48 @@ model User {
   lastName     String
   role         Role
   status       ActiveStatus @default(PENDING)
-  deletedAt    DateTime?    // Soft delete
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime? // Soft delete
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   // Relations
-  auditLogs    AuditLog[]
-  visits       Visit[]    @relation("VisitDoctor")
-  queueEntries QueueEntry[]
+  auditLogsAsActor AuditLog[]   @relation("ActorAuditLogs")
+  visits           Visit[]      @relation("VisitDoctor")
+  queueEntries     QueueEntry[]
 
-  @@map("users")
+  // === Auditing fields (very important for admins) ===
+  createdById    String? // Who created this user (admin)
+  createdBy      User?   @relation("UserCreatedBy", fields: [createdById], references: [id])
+  usersCreatedBy User[]  @relation("UserCreatedBy")
+  updatedById    String? // Who last updated this user
+  updatedBy      User?   @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  usersUpdatedBy User[]  @relation("UserUpdatedBy")
+
+  refreshTokens RefreshToken[]
+
   @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique // hashed refresh token (never plain text)
+  expiresAt DateTime
+  revokedAt DateTime? // null = still valid
+
+  // === Auditing / Session tracking fields ===
+  ipAddress  String? // IP from which user logged in
+  userAgent  String? // Browser / device info (e.g. "Chrome on Windows")
+  deviceInfo String? // Optional: "iPhone 15", "MacBook Pro", etc.
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
 }
 
 // ============================================================
@@ -85,15 +128,15 @@ model Patient {
   sex         Sex
   phone       String?
   address     String?
-  deletedAt   DateTime?  // Soft delete
+  deletedAt   DateTime? // Soft delete
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  visits      Visit[]
+  visits Visit[]
 
-  @@map("patients")
   @@index([firstName, lastName, dateOfBirth])
+  @@map("patients")
 }
 
 // ============================================================
@@ -101,13 +144,13 @@ model Patient {
 // ============================================================
 
 model Visit {
-  id          String      @id @default(uuid())
-  patientId   String
-  doctorId    String?
-  status      VisitStatus @default(CREATED)
-  deletedAt   DateTime?   // Soft delete
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id        String      @id @default(uuid())
+  patientId String
+  doctorId  String?
+  status    VisitStatus @default(CREATED)
+  deletedAt DateTime? // Soft delete
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   // Relations
   patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Restrict)
@@ -119,10 +162,10 @@ model Visit {
   prescriptions Prescription[]
   labOrders     LabOrder[]
 
-  @@map("visits")
   @@index([patientId, createdAt])
   @@index([doctorId])
   @@index([status])
+  @@map("visits")
 }
 
 // ============================================================
@@ -132,17 +175,17 @@ model Visit {
 model QueueEntry {
   id        String      @id @default(uuid())
   visitId   String      @unique
-  userId    String?     // Nurse or Doctor who last acted
+  userId    String? // Nurse or Doctor who last acted
   status    QueueStatus @default(WAITING_FOR_VITALS)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
   // Relations
-  visit     Visit       @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@map("queue_entries")
   @@index([status])
+  @@map("queue_entries")
 }
 
 // ============================================================
@@ -150,24 +193,24 @@ model QueueEntry {
 // ============================================================
 
 model Vital {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   visitId            String
   recordedById       String?
   systolicBP         Int?
   diastolicBP        Int?
   heartRate          Int?
   respiratoryRate    Int?
-  temperatureCelsius Decimal? @db.Decimal(4, 1)
-  weightKg           Decimal? @db.Decimal(5, 2)
-  heightCm           Decimal? @db.Decimal(5, 2)
-  recordedAt         DateTime @default(now())
-  deletedAt          DateTime?  // Soft delete
+  temperatureCelsius Decimal?  @db.Decimal(4, 1)
+  weightKg           Decimal?  @db.Decimal(5, 2)
+  heightCm           Decimal?  @db.Decimal(5, 2)
+  recordedAt         DateTime  @default(now())
+  deletedAt          DateTime? // Soft delete
 
   // Relations
-  visit              Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("vitals")
   @@index([visitId])
+  @@map("vitals")
 }
 
 // ============================================================
@@ -175,19 +218,19 @@ model Vital {
 // ============================================================
 
 model ClinicalNote {
-  id          String   @id @default(uuid())
-  visitId     String
-  authorId    String?  // Doctor
-  content     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?  // Soft delete
+  id        String    @id @default(uuid())
+  visitId   String
+  authorId  String? // Doctor
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
 
   // Relations
-  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("clinical_notes")
   @@index([visitId])
+  @@map("clinical_notes")
 }
 
 // ============================================================
@@ -195,19 +238,19 @@ model ClinicalNote {
 // ============================================================
 
 model Diagnosis {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   visitId     String
   authorId    String?
-  code        String?  // ICD-10 code
+  code        String? // ICD-10 code
   description String
-  createdAt   DateTime @default(now())
-  deletedAt   DateTime?  // Soft delete
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime? // Soft delete
 
   // Relations
-  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("diagnoses")
   @@index([visitId])
+  @@map("diagnoses")
 }
 
 // ============================================================
@@ -215,7 +258,7 @@ model Diagnosis {
 // ============================================================
 
 model Prescription {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   visitId      String
   prescriberId String?
   medication   String
@@ -223,14 +266,14 @@ model Prescription {
   frequency    String
   duration     String?
   notes        String?
-  createdAt    DateTime @default(now())
-  deletedAt    DateTime?  // Soft delete
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime? // Soft delete
 
   // Relations
-  visit        Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("prescriptions")
   @@index([visitId])
+  @@map("prescriptions")
 }
 
 // ============================================================
@@ -238,19 +281,19 @@ model Prescription {
 // ============================================================
 
 model LabOrder {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   visitId     String
   orderedById String?
   testName    String
   notes       String?
-  createdAt   DateTime @default(now())
-  deletedAt   DateTime?  // Soft delete
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime? // Soft delete
 
   // Relations
-  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("lab_orders")
   @@index([visitId])
+  @@map("lab_orders")
 }
 
 // ============================================================
@@ -258,19 +301,33 @@ model LabOrder {
 // ============================================================
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String?
-  action     String   // e.g. "CREATE_VISIT"
-  entity     String
-  entityId   String?
-  metadata   Json?    // extra context
-  ipAddress  String?
-  createdAt  DateTime @default(now())
+  id String @id @default(uuid())
 
-  // Relations
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Who performed the action (the staff member)
+  actorId String?
+  actor   User?   @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
 
+  // What was affected
+  targetType AuditTargetType?
+  targetId   String?
+
+  // Action details
+  action   String // e.g. "USER_CREATED", "VISIT_UPDATED", "VITALS_RECORDED", "LOGIN_SUCCESS"
+  entity   String? // You can keep this or turn it into an enum later
+  entityId String?
+
+  // Rich context (very useful for EMR auditing)
+  metadata Json? // Store { oldValues: {...}, newValues: {...}, reason: "..." }
+
+  // Request / Session info
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([action])
+  @@index([createdAt]) // Important for time-based audit queries
   @@map("audit_logs")
-  @@index([userId])
-  @@index([entity, entityId])
 }
