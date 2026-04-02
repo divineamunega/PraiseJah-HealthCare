@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { User } from '@prisma/client';
@@ -74,7 +75,7 @@ export class UsersService {
       });
       return user;
     } catch (err: any) {
-      if (err.code === 'P2025') throw new NotFoundException('User not found');
+      if (err.code === 'P2025') throw new UnauthorizedException("Wrong Email or Password");
       this.logger.error(err)
       throw InternalServerErrorException
     }
