@@ -9,15 +9,18 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { configDotenv } from 'dotenv';
 import { RouterModule } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module.js';
 
-configDotenv()
+configDotenv();
 
 @Module({
   imports: [
-    RouterModule.register([{
-      path: 'users',
-      module: UsersModule
-    }]),
+    RouterModule.register([
+      {
+        path: 'users',
+        module: UsersModule,
+      },
+    ]),
     PrismaModule,
     LoggerModule,
     UsersModule,
@@ -28,9 +31,10 @@ configDotenv()
         port: parseInt(process.env.REDIS_PORT!),
       },
     }),
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
