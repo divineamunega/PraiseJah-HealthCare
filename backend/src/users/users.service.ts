@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -14,13 +15,14 @@ import { handlePrismaUniqueError } from '../prisma/prisma.helpers.js';
 import { WelcomeMailService } from '../mail/welcome-mail.service.js';
 import { LoggerService } from '../logger/logger.service.js';
 
+
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly welcomeMailService: WelcomeMailService,
     private readonly logger: LoggerService,
-  ) {}
+  ) { }
 
   async create(dto: CreateUserDto, creator: User) {
     // 1. Making sure only allowed users can create users
@@ -73,7 +75,8 @@ export class UsersService {
       return user;
     } catch (err: any) {
       if (err.code === 'P2025') throw new NotFoundException('User not found');
-      throw new BadRequestException('Failed to query user by email');
+      this.logger.error(err)
+      throw InternalServerErrorException
     }
   }
 }
