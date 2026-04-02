@@ -75,9 +75,9 @@ export class UsersService {
       });
       return user;
     } catch (err: any) {
-      if (err.code === 'P2025') throw new UnauthorizedException("Wrong Email or Password");
+      if (err.code === 'P2025') throw new UnauthorizedException("Incorrect email or password");
       this.logger.error(err)
-      throw InternalServerErrorException
+      throw new InternalServerErrorException();
     }
   }
 }

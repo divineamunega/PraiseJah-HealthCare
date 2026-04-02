@@ -1,4 +1,4 @@
-import { Post, Body, Req, Res, Ip, Headers, Controller } from '@nestjs/common';
+import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import LoginDto from './login.dto.js';
 import { AuthService } from './auth.service.js';
@@ -11,12 +11,12 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   @Post('login')
+  @HttpCode(200)
   async login(
     @Body() loginDto: LoginDto,
-    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Ip() ip: string,
     @Headers() headers: any,
@@ -29,7 +29,7 @@ export class AuthController {
     const data = await this.authService.login(loginDto, {
       ip,
       userAgent: userAgent || null,
-      deviceInfo: `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}`,
+      deviceInfo: deviceInfo.browser.name && deviceInfo.os.name ? `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}` : undefined,
     });
 
     // Manually set the refresh token as HttpOnly cookie
@@ -40,6 +40,14 @@ export class AuthController {
       maxAge: ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')),
     });
 
-    return data;
+    return {
+      accessToken: data.accessToken, user: {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        role: data.user.role,
+      }
+    };
   }
 }

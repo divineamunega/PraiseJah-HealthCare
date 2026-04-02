@@ -22,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   async login(
     loginDto: LoginDto,
@@ -38,7 +38,7 @@ export class AuthService {
     );
 
     // 3. throw an error if the password is incorrect
-    if (!isCorrect) throw new UnauthorizedException();
+    if (!isCorrect) throw new UnauthorizedException("Incorrect email or password");
 
     // 4. Generate a jwt access token and a refresh token for this user
     const payload = { sub: user.id, email: user.email, role: user.role };
