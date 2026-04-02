@@ -15,12 +15,6 @@ configDotenv();
 
 @Module({
   imports: [
-    RouterModule.register([
-      {
-        path: 'users',
-        module: UsersModule,
-      },
-    ]),
     PrismaModule,
     LoggerModule,
     UsersModule,
@@ -37,4 +31,4 @@ configDotenv();
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

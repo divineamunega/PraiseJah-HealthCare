@@ -4,16 +4,24 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  UseGuards,
   Post,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UsersService } from './users.service.js';
 
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { User } from '@prisma/client';
+
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private readonly userService: UsersService) { }
 
-  @Post()
+  @Post('create')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createUserDto: CreateUserDto) {}
+  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() creator) {
+    return this.userService.create(createUserDto, creator);
+  }
 }

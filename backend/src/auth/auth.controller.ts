@@ -17,6 +17,7 @@ export class AuthController {
   @HttpCode(200)
   async login(
     @Body() loginDto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Ip() ip: string,
     @Headers() headers: any,
@@ -39,6 +40,7 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')),
     });
+
 
     return {
       accessToken: data.accessToken, user: {

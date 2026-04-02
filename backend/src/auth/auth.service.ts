@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
   Ip,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service.js';
 import { JwtService } from '@nestjs/jwt';
