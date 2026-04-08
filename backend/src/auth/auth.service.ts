@@ -40,7 +40,7 @@ export class AuthService {
     if (!isCorrect) throw new UnauthorizedException("Incorrect email or password");
 
     // 4. Generate a jwt access token and a refresh token for this user
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, role: user.role, status: user.status };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = crypto.randomBytes(32).toString('hex');
 

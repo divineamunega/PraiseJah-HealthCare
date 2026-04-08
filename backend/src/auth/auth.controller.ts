@@ -49,6 +49,7 @@ export class AuthController {
         firstName: data.user.firstName,
         lastName: data.user.lastName,
         role: data.user.role,
+        status: data.user.status,
       }
     };
   }

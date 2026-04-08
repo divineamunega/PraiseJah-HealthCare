@@ -48,6 +48,7 @@ export class UsersService {
           role: dto.role,
           email: dto.email,
           passwordHash,
+          createdById: creator.id,
         },
       });
     } catch (err) {
