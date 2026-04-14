@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import ms from 'ms';
-import LoginDto from './login.dto.js';
+import LoginDto from './dto/login.dto.js';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

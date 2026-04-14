@@ -1,6 +1,6 @@
 import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import LoginDto from './login.dto.js';
+import LoginDto from './dto/login.dto.js';
 import { AuthService } from './auth.service.js';
 import { UAParser } from 'ua-parser-js';
 import ms from 'ms';
