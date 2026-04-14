@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { User } from '@prisma/client';
+import { AuditTargetType, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { RoleCreationMap } from './constants/role.constants.js';
@@ -15,6 +15,7 @@ import { generateTempPassword } from '../common/utils/password.util.js';
 import { handlePrismaUniqueError } from '../prisma/prisma.helpers.js';
 import { WelcomeMailService } from '../mail/welcome-mail.service.js';
 import { LoggerService } from '../logger/logger.service.js';
+import { AuditService } from '../audit/audit.service.js';
 
 
 @Injectable()
@@ -23,6 +24,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly welcomeMailService: WelcomeMailService,
     private readonly logger: LoggerService,
+    private readonly auditService: AuditService,
   ) { }
 
   async create(dto: CreateUserDto, creator: User) {
@@ -56,7 +58,16 @@ export class UsersService {
       throw err;
     }
 
-    // 4. Send the welcome and change password email
+    // 4. Log the action
+    await this.auditService.createLog({
+      actorId: creator.id,
+      targetType: AuditTargetType.USER,
+      targetId: user.id,
+      action: 'USER_CREATED',
+      metadata: { role: user.role, email: user.email },
+    });
+
+    // 5. Send the welcome and change password email
     this.welcomeMailService
       .addWelcomeEmailJob({
         email: user.email,

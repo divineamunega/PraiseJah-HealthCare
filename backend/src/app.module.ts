@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { configDotenv } from 'dotenv';
 import { RouterModule } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
+import { AuditModule } from './audit/audit.module.js';
 
 configDotenv();
 
@@ -27,6 +28,7 @@ configDotenv();
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [AppService],
