@@ -1,4 +1,4 @@
-import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode, UseGuards } from '@nestjs/common';
+import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode, UseGuards, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import LoginDto from './dto/login.dto.js';
 import { AuthService } from './auth.service.js';
@@ -37,14 +37,7 @@ export class AuthController {
       deviceInfo: deviceInfo.browser.name && deviceInfo.os.name ? `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}` : undefined,
     });
 
-    // Manually set the refresh token as HttpOnly cookie
-    res.cookie('refresh_token', data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')),
-    });
-
+    this.setRefreshTokenCookie(res, data.refreshToken);
 
     return {
       accessToken: data.accessToken, user: {
@@ -58,6 +51,65 @@ export class AuthController {
     };
   }
 
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string,
+    @Headers() headers: any,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    const userAgent = headers.get
+      ? headers.get('user-agent')
+      : headers['user-agent'];
+    const deviceInfo = UAParser(userAgent || undefined);
+
+    const data = await this.authService.refreshTokens(refreshToken, {
+      ip,
+      userAgent: userAgent || null,
+      deviceInfo: deviceInfo.browser.name && deviceInfo.os.name ? `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}` : undefined,
+    });
+
+    this.setRefreshTokenCookie(res, data.refreshToken);
+
+    return {
+      accessToken: data.accessToken,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        role: data.user.role,
+        status: data.user.status,
+      }
+    };
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return { message: 'Logged out successfully' };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   @HttpCode(200)
@@ -66,5 +118,14 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(user.id, changePasswordDto);
+  }
+
+  private setRefreshTokenCookie(res: Response, refreshToken: string) {
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')),
+    });
   }
 }

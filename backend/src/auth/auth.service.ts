@@ -53,25 +53,9 @@ export class AuthService {
         throw new UnauthorizedException("Incorrect email or password");
       }
 
-      // 4. Generate a jwt access token and a refresh token for this user
-      const payload = { sub: user.id, email: user.email, role: user.role, status: user.status };
-      const accessToken = this.jwtService.sign(payload);
-      const refreshToken = crypto.randomBytes(32).toString('hex');
-
-      // 5. hash the freshly generated refresh token and store it in the database
-      const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-      await this.prisma.refreshToken.create({
-        data: {
-          tokenHash: refreshTokenHash,
-          userId: user.id,
-          expiresAt: new Date(
-            ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')) + Date.now(),
-          ),
-          ipAddress: requestInfo.ip,
-          deviceInfo: requestInfo.deviceInfo || null,
-          userAgent: requestInfo.userAgent || null,
-        },
-      });
+      // 4. Generate tokens using helpers
+      const accessToken = this.generateAccessToken(user);
+      const refreshToken = await this.generateAndStoreRefreshToken(user, requestInfo);
 
       // 6. Log successful login
       await this.auditService.createLog({
@@ -84,7 +68,7 @@ export class AuthService {
       });
 
       return { accessToken, refreshToken, user };
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof UnauthorizedException) throw err;
 
       await this.auditService.createLog({
@@ -94,8 +78,89 @@ export class AuthService {
         ipAddress: requestInfo.ip,
         userAgent: requestInfo.userAgent || undefined,
       });
-      
+
       throw err;
+    }
+  }
+
+  async refreshTokens(
+    combinedToken: string,
+    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string },
+  ) {
+    try {
+      const [id, plainToken] = combinedToken.split('.');
+      if (!id || !plainToken) {
+        throw new UnauthorizedException('Invalid refresh token format');
+      }
+
+      const record = await this.prisma.refreshToken.findFirst({
+        where: {
+          id,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: { user: true },
+      });
+
+      if (!record) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const isMatch = await bcrypt.compare(plainToken, record.tokenHash);
+      if (!isMatch) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const user = record.user;
+
+      // 2. Revoke the old token (Rotation)
+      await this.prisma.refreshToken.update({
+        where: { id: record.id },
+        data: { revokedAt: new Date() },
+      });
+
+      // 3. Generate new pair using helpers
+      const accessToken = this.generateAccessToken(user);
+      const newRefreshToken = await this.generateAndStoreRefreshToken(user, {
+        ip: requestInfo.ip,
+        userAgent: requestInfo.userAgent || record.userAgent,
+        deviceInfo: requestInfo.deviceInfo || record.deviceInfo || undefined,
+      });
+
+      return { accessToken, refreshToken: newRefreshToken, user };
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
+      throw new InternalServerErrorException('An unexpected error occurred during token refresh');
+    }
+  }
+
+  async logout(combinedToken: string) {
+    try {
+      const [id, plainToken] = combinedToken.split('.');
+      if (!id || !plainToken) return;
+
+      const record = await this.prisma.refreshToken.findFirst({
+        where: { id, revokedAt: null },
+      });
+
+      if (!record) return;
+
+      const isMatch = await bcrypt.compare(plainToken, record.tokenHash);
+      if (isMatch) {
+        await this.prisma.refreshToken.update({
+          where: { id: record.id },
+          data: { revokedAt: new Date() },
+        });
+
+        await this.auditService.createLog({
+          actorId: record.userId,
+          action: 'LOGOUT',
+          targetType: AuditTargetType.USER,
+          targetId: record.userId,
+        });
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
     }
   }
 
@@ -160,5 +225,38 @@ export class AuthService {
 
       throw new InternalServerErrorException('An unexpected error occurred while changing password');
     }
+  }
+
+  private generateAccessToken(user: any): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    };
+    return this.jwtService.sign(payload);
+  }
+
+  private async generateAndStoreRefreshToken(
+    user: any,
+    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string },
+  ): Promise<string> {
+    const plainToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = await bcrypt.hash(plainToken, 10);
+
+    const tokenRecord = await this.prisma.refreshToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt: new Date(
+          ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')) + Date.now(),
+        ),
+        ipAddress: requestInfo.ip,
+        deviceInfo: requestInfo.deviceInfo || null,
+        userAgent: requestInfo.userAgent || null,
+      },
+    });
+
+    return `${tokenRecord.id}.${plainToken}`;
   }
 }
