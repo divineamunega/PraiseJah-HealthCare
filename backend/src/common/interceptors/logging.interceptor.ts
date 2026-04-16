@@ -3,14 +3,14 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { LoggerService } from '../../logger/logger.service.js';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(LoggingInterceptor.name);
+  constructor(private readonly logger: LoggerService) { }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
@@ -23,6 +23,7 @@ export class LoggingInterceptor implements NestInterceptor {
       tap(() =>
         this.logger.log(
           `[${correlationId}] ${method} ${url} ${Date.now() - now}ms`,
+          LoggingInterceptor.name,
         ),
       ),
     );
