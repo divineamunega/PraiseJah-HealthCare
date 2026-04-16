@@ -31,12 +31,19 @@ export class LoggerService implements NestLoggerService {
     this.logger.info(message, { context });
   }
 
-  fatal(message: any, trace?: string, context?: string) {
-    this.logger.error(message, { trace, context, fatal: true });
+  fatal(message: any, trace?: any, context?: string) {
+    this.logger.error(message, { 
+      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace), 
+      context, 
+      fatal: true 
+    });
   }
 
-  error(message: any, trace?: string, context?: string) {
-    this.logger.error(message, { trace, context });
+  error(message: any, trace?: any, context?: string) {
+    this.logger.error(message, { 
+      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace), 
+      context 
+    });
   }
 
   warn(message: any, context?: string) {
