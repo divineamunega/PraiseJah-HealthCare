@@ -6,15 +6,15 @@ import {
   HttpStatus,
   UseGuards,
   Post,
-  Req,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UsersService } from './users.service.js';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Audit } from '../audit/decorators/audit.decorator.js';
+import { AuditTargetType } from '@prisma/client';
 import type { User } from '@prisma/client';
 
 @Controller('users')
@@ -23,13 +23,13 @@ export class UsersController {
 
   @Post('create')
   @UseGuards(JwtAuthGuard, ActiveStatusGuard)
+  @Audit({ action: 'USER_CREATED', targetType: AuditTargetType.USER })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() creator,
-    @Req() req: Request,
   ) {
-    return this.userService.create(createUserDto, creator, req['correlationId']);
+    return this.userService.create(createUserDto, creator);
   }
 
   @Get('me')

@@ -27,7 +27,7 @@ export class UsersService {
     private readonly auditService: AuditService,
   ) { }
 
-  async create(dto: CreateUserDto, creator: User, correlationId?: string) {
+  async create(dto: CreateUserDto, creator: User) {
     // 1. Making sure only allowed users can create users
     const allowedRoles = RoleCreationMap[creator.role];
     if (!allowedRoles.includes(dto.role)) {
@@ -57,16 +57,6 @@ export class UsersService {
       handlePrismaUniqueError(err, 'email');
       throw err;
     }
-
-    // 4. Log the action
-    await this.auditService.createLog({
-      actorId: creator.id,
-      targetType: AuditTargetType.USER,
-      targetId: user.id,
-      action: 'USER_CREATED',
-      metadata: { role: user.role, email: user.email },
-      correlationId,
-    });
 
     // 5. Send the welcome and change password email
     this.welcomeMailService
