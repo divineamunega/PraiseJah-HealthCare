@@ -102,9 +102,10 @@ model RefreshToken {
   revokedAt DateTime? // null = still valid
 
   // === Auditing / Session tracking fields ===
-  ipAddress  String? // IP from which user logged in
-  userAgent  String? // Browser / device info (e.g. "Chrome on Windows")
-  deviceInfo String? // Optional: "iPhone 15", "MacBook Pro", etc.
+  ipAddress     String? // IP from which user logged in
+  userAgent     String? // Browser / device info (e.g. "Chrome on Windows")
+  deviceInfo    String? // Optional: "iPhone 15", "MacBook Pro", etc.
+  correlationId String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -114,6 +115,8 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@index([revokedAt])
+  @@index([correlationId])
+  @@map("refresh_tokens")
 }
 
 // ============================================================
