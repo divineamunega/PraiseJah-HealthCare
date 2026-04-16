@@ -30,11 +30,13 @@ export class AuthController {
       ? headers.get('user-agent')
       : headers['user-agent'];
     const deviceInfo = UAParser(userAgent || undefined);
+    const correlationId = req['correlationId'];
 
     const data = await this.authService.login(loginDto, {
       ip,
       userAgent: userAgent || null,
       deviceInfo: deviceInfo.browser.name && deviceInfo.os.name ? `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}` : undefined,
+      correlationId,
     });
 
     this.setRefreshTokenCookie(res, data.refreshToken);
@@ -68,11 +70,13 @@ export class AuthController {
       ? headers.get('user-agent')
       : headers['user-agent'];
     const deviceInfo = UAParser(userAgent || undefined);
+    const correlationId = req['correlationId'];
 
     const data = await this.authService.refreshTokens(refreshToken, {
       ip,
       userAgent: userAgent || null,
       deviceInfo: deviceInfo.browser.name && deviceInfo.os.name ? `${deviceInfo.browser.name} ${deviceInfo.browser.version} on ${deviceInfo.os.name} ${deviceInfo.os.version}` : undefined,
+      correlationId,
     });
 
     this.setRefreshTokenCookie(res, data.refreshToken);
@@ -98,7 +102,7 @@ export class AuthController {
   ) {
     const refreshToken = req.cookies['refresh_token'];
     if (refreshToken) {
-      await this.authService.logout(refreshToken);
+      await this.authService.logout(refreshToken, req['correlationId']);
     }
 
     res.clearCookie('refresh_token', {
@@ -114,10 +118,11 @@ export class AuthController {
   @Post('change-password')
   @HttpCode(200)
   async changePassword(
+    @Req() req: Request,
     @CurrentUser() user: User,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    return this.authService.changePassword(user.id, changePasswordDto);
+    return this.authService.changePassword(user.id, changePasswordDto, req['correlationId']);
   }
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {

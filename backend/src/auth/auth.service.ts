@@ -29,7 +29,7 @@ export class AuthService {
 
   async login(
     loginDto: LoginDto,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string },
+    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
   ) {
     try {
       // 1. look for user in the database
@@ -49,6 +49,7 @@ export class AuthService {
           metadata: { email: loginDto.email, reason: 'Incorrect password' },
           ipAddress: requestInfo.ip,
           userAgent: requestInfo.userAgent || undefined,
+          correlationId: requestInfo.correlationId,
         });
         throw new UnauthorizedException("Incorrect email or password");
       }
@@ -65,6 +66,7 @@ export class AuthService {
         action: 'LOGIN_SUCCESS',
         ipAddress: requestInfo.ip,
         userAgent: requestInfo.userAgent || undefined,
+        correlationId: requestInfo.correlationId,
       });
 
       return { accessToken, refreshToken, user };
@@ -77,6 +79,7 @@ export class AuthService {
         metadata: { email: loginDto.email, reason: err.message || 'Unknown failure' },
         ipAddress: requestInfo.ip,
         userAgent: requestInfo.userAgent || undefined,
+        correlationId: requestInfo.correlationId,
       });
 
       throw err;
@@ -85,7 +88,7 @@ export class AuthService {
 
   async refreshTokens(
     combinedToken: string,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string },
+    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
   ) {
     try {
       const [id, plainToken] = combinedToken.split('.');
@@ -125,6 +128,7 @@ export class AuthService {
         ip: requestInfo.ip,
         userAgent: requestInfo.userAgent || record.userAgent,
         deviceInfo: requestInfo.deviceInfo || record.deviceInfo || undefined,
+        correlationId: requestInfo.correlationId,
       });
 
       return { accessToken, refreshToken: newRefreshToken, user };
@@ -134,7 +138,7 @@ export class AuthService {
     }
   }
 
-  async logout(combinedToken: string) {
+  async logout(combinedToken: string, correlationId?: string) {
     try {
       const [id, plainToken] = combinedToken.split('.');
       if (!id || !plainToken) return;
@@ -157,6 +161,7 @@ export class AuthService {
           action: 'LOGOUT',
           targetType: AuditTargetType.USER,
           targetId: record.userId,
+          correlationId,
         });
       }
     } catch (err) {
@@ -164,7 +169,7 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
+  async changePassword(userId: string, dto: ChangePasswordDto, correlationId?: string) {
     try {
       // 1. Verify confirm password matches
       if (dto.newPassword !== dto.confirmPassword) {
@@ -183,6 +188,7 @@ export class AuthService {
           targetId: userId,
           action: 'PASSWORD_CHANGE_FAILURE',
           metadata: { reason: 'Incorrect old password' },
+          correlationId,
         });
         throw new BadRequestException('Incorrect old password');
       }
@@ -215,6 +221,7 @@ export class AuthService {
         targetId: userId,
         action: 'PASSWORD_CHANGE_SUCCESS',
         metadata: { activated: user.status === ActiveStatus.PENDING },
+        correlationId,
       });
 
       return { message };
@@ -239,7 +246,7 @@ export class AuthService {
 
   private async generateAndStoreRefreshToken(
     user: any,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string },
+    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
   ): Promise<string> {
     const plainToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = await bcrypt.hash(plainToken, 10);
@@ -254,6 +261,7 @@ export class AuthService {
         ipAddress: requestInfo.ip,
         deviceInfo: requestInfo.deviceInfo || null,
         userAgent: requestInfo.userAgent || null,
+        correlationId: requestInfo.correlationId,
       },
     });
 

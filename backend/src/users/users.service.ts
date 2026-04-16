@@ -27,7 +27,7 @@ export class UsersService {
     private readonly auditService: AuditService,
   ) { }
 
-  async create(dto: CreateUserDto, creator: User) {
+  async create(dto: CreateUserDto, creator: User, correlationId?: string) {
     // 1. Making sure only allowed users can create users
     const allowedRoles = RoleCreationMap[creator.role];
     if (!allowedRoles.includes(dto.role)) {
@@ -65,6 +65,7 @@ export class UsersService {
       targetId: user.id,
       action: 'USER_CREATED',
       metadata: { role: user.role, email: user.email },
+      correlationId,
     });
 
     // 5. Send the welcome and change password email

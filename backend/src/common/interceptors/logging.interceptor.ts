@@ -16,12 +16,13 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const method = request.method;
     const url = request.url;
+    const correlationId = request['correlationId'];
     const now = Date.now();
 
     return next.handle().pipe(
       tap(() =>
         this.logger.log(
-          `${method} ${url} ${Date.now() - now}ms`,
+          `[${correlationId}] ${method} ${url} ${Date.now() - now}ms`,
         ),
       ),
     );

@@ -320,14 +320,16 @@ model AuditLog {
   metadata Json? // Store { oldValues: {...}, newValues: {...}, reason: "..." }
 
   // Request / Session info
-  ipAddress String?
-  userAgent String?
+  ipAddress     String?
+  userAgent     String?
+  correlationId String?
 
   createdAt DateTime @default(now())
 
   @@index([actorId])
   @@index([targetType, targetId])
   @@index([action])
-  @@index([createdAt]) // Important for time-based audit queries
+  @@index([createdAt])
+  @@index([correlationId])
   @@map("audit_logs")
 }

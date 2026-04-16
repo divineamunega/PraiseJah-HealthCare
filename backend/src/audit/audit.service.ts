@@ -16,6 +16,7 @@ export class AuditService {
     metadata?: Prisma.InputJsonValue;
     ipAddress?: string;
     userAgent?: string;
+    correlationId?: string;
   }) {
     return this.prisma.auditLog.create({
       data: {
@@ -28,6 +29,7 @@ export class AuditService {
         metadata: data.metadata,
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
+        correlationId: data.correlationId,
       },
     });
   }

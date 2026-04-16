@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppService } from './app.service.js';
 import { AppController } from './app.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -11,6 +11,7 @@ import { configDotenv } from 'dotenv';
 import { RouterModule } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
 import { AuditModule } from './audit/audit.module.js';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 
 configDotenv();
 
@@ -33,4 +34,8 @@ configDotenv();
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

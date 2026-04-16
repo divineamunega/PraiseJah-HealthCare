@@ -6,7 +6,9 @@ import {
   HttpStatus,
   UseGuards,
   Post,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UsersService } from './users.service.js';
 
@@ -22,8 +24,12 @@ export class UsersController {
   @Post('create')
   @UseGuards(JwtAuthGuard, ActiveStatusGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() creator) {
-    return this.userService.create(createUserDto, creator);
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() creator,
+    @Req() req: Request,
+  ) {
+    return this.userService.create(createUserDto, creator, req['correlationId']);
   }
 
   @Get('me')
