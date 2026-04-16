@@ -5,7 +5,8 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { appendFileSync } from 'fs';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -19,15 +20,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const exceptionResponse: any =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : { message: 'Internal server error' };
-
-    const message =
-      typeof exceptionResponse === 'object'
+    let message = 'Internal server error';
+    
+    if (exception instanceof HttpException) {
+      const exceptionResponse: any = exception.getResponse();
+      message = typeof exceptionResponse === 'object'
         ? exceptionResponse.message || exceptionResponse.error
         : exceptionResponse;
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      // Log non-http errors to a file we can read
+      try {
+        appendFileSync('debug.log', `[${new Date().toISOString()}] ${exception.stack}\n`);
+      } catch (e) {
+        // ignore
+      }
+    }
 
     response.status(status).json({
       statusCode: status,

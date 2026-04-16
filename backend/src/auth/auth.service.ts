@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  Ip,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service.js';
@@ -14,7 +14,8 @@ import ms from 'ms';
 import LoginDto from './dto/login.dto.js';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../audit/audit.service.js';
-import { AuditTargetType } from '@prisma/client';
+import { AuditTargetType, ActiveStatus } from '@prisma/client';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -86,13 +87,6 @@ export class AuthService {
     } catch (err) {
       if (err instanceof UnauthorizedException) throw err;
 
-      // Handle case where user was not found (findUniqueByEmail throws UnauthorizedException)
-      // If findUniqueByEmail throws UnauthorizedException, it will be caught here and re-thrown
-      // but we want to audit it if it's a login failure.
-      
-      // Let's refine findUniqueByEmail to not throw if we want more control here, 
-      // or just check the error type.
-      
       await this.auditService.createLog({
         action: 'LOGIN_FAILURE',
         entity: 'USER',
@@ -102,6 +96,69 @@ export class AuthService {
       });
       
       throw err;
+    }
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    try {
+      // 1. Verify confirm password matches
+      if (dto.newPassword !== dto.confirmPassword) {
+        throw new BadRequestException('Passwords do not match');
+      }
+
+      // 2. Fetch user
+      const user = await this.userService.findById(userId);
+
+      // 3. Verify old password
+      const isCorrect = await bcrypt.compare(dto.oldPassword, user.passwordHash);
+      if (!isCorrect) {
+        await this.auditService.createLog({
+          actorId: userId,
+          targetType: AuditTargetType.USER,
+          targetId: userId,
+          action: 'PASSWORD_CHANGE_FAILURE',
+          metadata: { reason: 'Incorrect old password' },
+        });
+        throw new BadRequestException('Incorrect old password');
+      }
+
+      // 4. Hash new password
+      const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+      // 5. Determine new status and message
+      let newStatus = user.status;
+      let message = 'Password changed successfully';
+
+      if (user.status === ActiveStatus.PENDING) {
+        newStatus = ActiveStatus.ACTIVE;
+        message = 'Password changed and account activated successfully';
+      }
+
+      // 6. Update user
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash,
+          status: newStatus,
+        },
+      });
+
+      // 7. Log success
+      await this.auditService.createLog({
+        actorId: userId,
+        targetType: AuditTargetType.USER,
+        targetId: userId,
+        action: 'PASSWORD_CHANGE_SUCCESS',
+        metadata: { activated: user.status === ActiveStatus.PENDING },
+      });
+
+      return { message };
+    } catch (err) {
+      if (err instanceof BadRequestException || err instanceof NotFoundException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException('An unexpected error occurred while changing password');
     }
   }
 }

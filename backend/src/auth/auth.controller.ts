@@ -1,10 +1,14 @@
-import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode } from '@nestjs/common';
+import { Post, Body, Req, Res, Ip, Headers, Controller, HttpCode, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import LoginDto from './dto/login.dto.js';
 import { AuthService } from './auth.service.js';
 import { UAParser } from 'ua-parser-js';
 import ms from 'ms';
 import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
+import type { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -52,5 +56,15 @@ export class AuthController {
         status: data.user.status,
       }
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(200)
+  async changePassword(
+    @CurrentUser() user: User,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(user.id, changePasswordDto);
   }
 }

@@ -26,12 +26,26 @@ export class TransformInterceptor<T>
     const statusCode = response.statusCode;
 
     return next.handle().pipe(
-      map((data) => ({
-        statusCode,
-        success: true,
-        message: data?.message || 'Request successful',
-        data: data?.data || data,
-      })),
+      map((data) => {
+        const hasDataField = data && typeof data === 'object' && 'data' in data;
+        const hasMessageField = data && typeof data === 'object' && 'message' in data;
+
+        const message = data?.message || 'Request successful';
+        let resultData = hasDataField ? data.data : data;
+
+        // If the original data only contained a message, we should probably return null for data
+        // to avoid { message: "...", data: { message: "..." } }
+        if (hasMessageField && !hasDataField && Object.keys(data).length === 1) {
+          resultData = null;
+        }
+
+        return {
+          statusCode,
+          success: true,
+          message,
+          data: resultData,
+        };
+      }),
     );
   }
 }
