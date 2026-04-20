@@ -9,6 +9,7 @@ import { JwtStrategy } from './jwt.strategy.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuditModule } from '../audit/audit.module.js';
 import { LoggerModule } from '../logger/logger.module.js';
+import { AuthMailModule } from '../mail/auth-mail.module.js';
 
 @Module({
   controllers: [AuthController],
@@ -18,6 +19,7 @@ import { LoggerModule } from '../logger/logger.module.js';
     PrismaModule,
     AuditModule,
     LoggerModule,
+    AuthMailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

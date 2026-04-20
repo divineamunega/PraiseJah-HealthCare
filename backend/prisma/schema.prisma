@@ -67,8 +67,10 @@ enum AuditTargetType {
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
-  passwordHash String
-  firstName    String
+  passwordHash            String
+  passwordResetTokenHash  String?      @unique
+  passwordResetExpires    DateTime?
+  firstName               String
   lastName     String
   role         Role
   status       ActiveStatus @default(PENDING)

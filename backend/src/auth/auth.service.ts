@@ -14,8 +14,11 @@ import ms from 'ms';
 import LoginDto from './dto/login.dto.js';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../audit/audit.service.js';
-import { AuditTargetType, ActiveStatus } from '@prisma/client';
+import { AuditTargetType, ActiveStatus, Prisma } from '@prisma/client';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { AuthMailService } from '../mail/auth-mail.service.js';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +28,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly auditService: AuditService,
+    private readonly authMailService: AuthMailService,
   ) { }
 
   async login(
@@ -232,6 +236,96 @@ export class AuthService {
 
       throw new InternalServerErrorException('An unexpected error occurred while changing password');
     }
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto, correlationId?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // To prevent email enumeration, we return success even if the user doesn't exist
+    if (!user) {
+      return { message: 'If your email is in our system, you will receive a reset link shortly.' };
+    }
+
+    // Generate a secure token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = await bcrypt.hash(token, 10);
+
+    // Store hashed token and expiry (30 mins)
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpires: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+
+    // Send email (Queued)
+    await this.authMailService.addPasswordResetEmailJob({
+      name: user.firstName,
+      email: user.email,
+      resetToken: token,
+    });
+
+    await this.auditService.createLog({
+      actorId: user.id,
+      targetType: AuditTargetType.USER,
+      targetId: user.id,
+      action: 'PASSWORD_RESET_REQUESTED',
+      correlationId,
+    });
+
+    return { message: 'If your email is in our system, you will receive a reset link shortly.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto, correlationId?: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        passwordResetExpires: { gt: new Date() },
+        passwordResetTokenHash: { not: null },
+      },
+    });
+
+    let targetUser: any = null;
+    for (const user of users) {
+      if (user.passwordResetTokenHash && await bcrypt.compare(dto.token, user.passwordResetTokenHash)) {
+        targetUser = user;
+        break;
+      }
+    }
+
+    if (!targetUser) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: targetUser.id },
+      data: {
+        passwordHash,
+        passwordResetTokenHash: null,
+        passwordResetExpires: null,
+        status: targetUser.status === ActiveStatus.PENDING ? ActiveStatus.ACTIVE : targetUser.status,
+      },
+    });
+
+    // Revoke all refresh tokens for security
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: targetUser.id },
+      data: { revokedAt: new Date() },
+    });
+
+    await this.auditService.createLog({
+      actorId: targetUser.id,
+      targetType: AuditTargetType.USER,
+      targetId: targetUser.id,
+      action: 'PASSWORD_RESET_SUCCESS',
+      correlationId,
+    });
+
+    return { message: 'Password has been reset successfully. Please login with your new password.' };
   }
 
   private generateAccessToken(user: any): string {
