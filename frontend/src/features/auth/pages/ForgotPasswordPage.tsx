@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForgotPassword } from '../../lib/authQueries';
+import { useForgotPassword } from '@/features/auth/hooks/useAuth';
 import { Shield, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router';

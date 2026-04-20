@@ -14,9 +14,9 @@ import {
   type ForgotPasswordRequest,
   type ResetPasswordRequest,
   type ChangePasswordRequest,
-} from './auth';
-import { useAuthStore } from '../store/useAuthStore';
-import { setAccessToken } from './tokenStore';
+} from '../api/auth.api';
+import { useAuthStore } from '../stores/auth.store';
+import { setAccessToken } from '../utils/token.util';
 
 const AUTH_KEYS = {
   me: ['auth', 'me'] as const,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useResetPassword } from '../../lib/authQueries';
+import { useResetPassword } from '@/features/auth/hooks/useAuth';
 import { Shield, Lock, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams, useNavigate } from 'react-router';

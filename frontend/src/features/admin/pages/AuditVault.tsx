@@ -1,5 +1,5 @@
 import { Terminal } from 'lucide-react';
-import { useAdminStore } from '../../store/adminStore';
+import { useAdminStore } from '@/features/admin/stores/admin.store';
 
 const AuditVault = () => {
   const { logs } = useAdminStore();

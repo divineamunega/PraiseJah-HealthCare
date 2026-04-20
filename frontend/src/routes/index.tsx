@@ -1,61 +1,21 @@
 import { Routes, Route, Navigate } from 'react-router';
-import LoginPage from '../pages/auth/LoginPage';
-import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
-import DashboardLayout from '../components/layout/DashboardLayout';
-import AdminOverview from '../pages/admin/Overview';
-import StaffManagement from '../pages/admin/StaffManagement';
-import AuditVault from '../pages/admin/AuditVault';
-import DoctorDashboard from '../pages/DoctorDashboard';
-import NurseDashboard from '../pages/NurseDashboard';
-import { useAuthStore } from '../store/useAuthStore';
+import LoginPage from '@/features/auth/pages/LoginPage';
+import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
+import DashboardLayout from '@/components/shared/layout/DashboardLayout';
+import AdminOverview from '@/features/admin/pages/Overview';
+import StaffManagement from '@/features/admin/pages/StaffManagement';
+import AuditVault from '@/features/admin/pages/AuditVault';
+import PatientManagement from '@/features/admin/pages/PatientManagement';
+import SystemSettings from '@/features/admin/pages/SystemSettings';
+import DatabaseManagement from '@/features/admin/pages/DatabaseManagement';
+import RolePermissions from '@/features/admin/pages/RolePermissions';
+import DoctorDashboard from '@/features/clinical/pages/DoctorDashboard';
+import NurseDashboard from '@/features/clinical/pages/NurseDashboard';
+import SecretaryDashboard from '@/features/clinical/pages/SecretaryDashboard';
 
-type Role = string;
-
-const ROLE_HOME: Record<string, string> = {
-  SUPER_ADMIN: '/admin',
-  ADMIN: '/admin',
-  DOCTOR: '/doctor',
-  NURSE: '/nurse',
-  SECRETARY: '/nurse',
-};
-
-function getRoleHome(role: Role): string {
-  return ROLE_HOME[role] || '/admin';
-}
-
-const ROLE_ACCESS: Record<string, string[]> = {
-  SUPER_ADMIN: ['/admin', '/doctor', '/nurse'],
-  ADMIN: ['/admin'],
-  DOCTOR: ['/doctor'],
-  NURSE: ['/nurse'],
-  SECRETARY: ['/nurse'],
-};
-
-function canAccess(role: Role, path: string): boolean {
-  const allowed = ROLE_ACCESS[role] || [];
-  return allowed.some((prefix) => path.startsWith(prefix));
-}
-
-const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
-const RoleGuard = ({ path, children }: { path: string; children: React.ReactNode }) => {
-  const { user } = useAuthStore();
-  if (!user) return <Navigate to="/login" replace />;
-  if (!canAccess(user.role, path)) return <Navigate to={getRoleHome(user.role)} replace />;
-  return <>{children}</>;
-};
-
-const GuestGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuthStore();
-  if (isAuthenticated && user) {
-    return <Navigate to={getRoleHome(user.role)} replace />;
-  }
-  return <>{children}</>;
-};
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+import { AuthGuard, RoleGuard, GuestGuard, getRoleHome } from '@/features/auth/components/Guards';
 
 const DefaultRedirect = () => {
   const { user } = useAuthStore();
@@ -73,12 +33,25 @@ const AppRoutes = () => {
       <Route path="/" element={<AuthGuard><DashboardLayout /></AuthGuard>}>
         <Route index element={<DefaultRedirect />} />
 
+        {/* Admin Routes */}
         <Route path="admin" element={<RoleGuard path="/admin"><AdminOverview /></RoleGuard>} />
         <Route path="admin/staff" element={<RoleGuard path="/admin"><StaffManagement /></RoleGuard>} />
         <Route path="admin/audit" element={<RoleGuard path="/admin"><AuditVault /></RoleGuard>} />
+        <Route path="admin/patients" element={<RoleGuard path="/admin"><PatientManagement /></RoleGuard>} />
+        
+        {/* SUPER_ADMIN Only Routes */}
+        <Route path="admin/settings" element={<RoleGuard path="/admin/settings"><SystemSettings /></RoleGuard>} />
+        <Route path="admin/database" element={<RoleGuard path="/admin/database"><DatabaseManagement /></RoleGuard>} />
+        <Route path="admin/permissions" element={<RoleGuard path="/admin/permissions"><RolePermissions /></RoleGuard>} />
 
+        {/* Doctor Routes */}
         <Route path="doctor" element={<RoleGuard path="/doctor"><DoctorDashboard /></RoleGuard>} />
+
+        {/* Nurse Routes */}
         <Route path="nurse" element={<RoleGuard path="/nurse"><NurseDashboard /></RoleGuard>} />
+
+        {/* Secretary Routes */}
+        <Route path="secretary" element={<RoleGuard path="/secretary"><SecretaryDashboard /></RoleGuard>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

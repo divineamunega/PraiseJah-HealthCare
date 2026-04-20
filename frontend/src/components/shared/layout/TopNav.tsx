@@ -1,6 +1,6 @@
 import { Search, Bell, Command, LogOut } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
-import { useLogout } from '../../lib/authQueries';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useNavigate } from 'react-router';
 
 const TopNav = () => {

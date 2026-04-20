@@ -5,9 +5,18 @@ import {
   LogOut,
   ShieldCheck,
   UserCheck,
+  Database,
+  FileText,
+  Calendar,
+  Activity,
+  Thermometer,
+  ClipboardList,
+  UserPlus,
+  HardDrive,
+  Lock,
 } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
-import { useLogout } from '../../lib/authQueries';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router';
 import { motion } from 'framer-motion';
 
@@ -20,12 +29,34 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  // Admin Routes
   { id: 'admin_overview', path: '/admin', icon: LayoutDashboard, label: 'Dashboard', roles: ['SUPER_ADMIN', 'ADMIN'] },
   { id: 'staff', path: '/admin/staff', icon: UserCheck, label: 'Staff Management', roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { id: 'patients', path: '/admin/patients', icon: Database, label: 'Patient Registry', roles: ['SUPER_ADMIN', 'ADMIN'] },
   { id: 'audit', path: '/admin/audit', icon: ShieldCheck, label: 'Security Audit', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'doctor_dash', path: '/doctor', icon: LayoutDashboard, label: 'Doctor Dash', roles: ['DOCTOR'] },
-  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Nurse Dash', roles: ['NURSE', 'SECRETARY'] },
-  { id: 'patients', path: '/patients', icon: Users, label: 'Patients', roles: ['DOCTOR', 'NURSE'] },
+  
+  // SUPER_ADMIN Only Routes
+  { id: 'settings', path: '/admin/settings', icon: Settings, label: 'System Settings', roles: ['SUPER_ADMIN'] },
+  { id: 'database', path: '/admin/database', icon: HardDrive, label: 'Database Management', roles: ['SUPER_ADMIN'] },
+  { id: 'permissions', path: '/admin/permissions', icon: Lock, label: 'Role Permissions', roles: ['SUPER_ADMIN'] },
+
+  // Doctor Routes
+  { id: 'doctor_dash', path: '/doctor', icon: LayoutDashboard, label: 'Clinical Cockpit', roles: ['DOCTOR'] },
+  { id: 'doctor_patients', path: '/doctor/patients', icon: Users, label: 'My Patients', roles: ['DOCTOR'] },
+  { id: 'doctor_notes', path: '/doctor/notes', icon: FileText, label: 'Clinical Notes', roles: ['DOCTOR'] },
+  { id: 'doctor_prescriptions', path: '/doctor/prescriptions', icon: Activity, label: 'Prescriptions', roles: ['DOCTOR'] },
+
+  // Nurse Routes
+  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Triage Station', roles: ['NURSE', 'SECRETARY'] },
+  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Queue Management', roles: ['NURSE', 'SECRETARY'] },
+  { id: 'nurse_vitals', path: '/nurse/vitals', icon: Thermometer, label: 'Vitals Recording', roles: ['NURSE'] },
+  { id: 'nurse_patients', path: '/nurse/patients', icon: Users, label: 'Patient List', roles: ['NURSE', 'SECRETARY'] },
+
+  // Secretary Routes
+  { id: 'secretary_dash', path: '/secretary', icon: LayoutDashboard, label: 'Front Desk', roles: ['SECRETARY'] },
+  { id: 'secretary_schedule', path: '/secretary/schedule', icon: Calendar, label: 'Appointments', roles: ['SECRETARY'] },
+  { id: 'secretary_checkin', path: '/secretary/checkin', icon: UserPlus, label: 'Patient Check-In', roles: ['SECRETARY'] },
+  { id: 'secretary_visits', path: '/secretary/visits', icon: FileText, label: 'Visit Management', roles: ['SECRETARY'] },
 ];
 
 const Sidebar = () => {

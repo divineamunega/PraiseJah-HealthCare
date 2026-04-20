@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Database, UserPlus } from 'lucide-react';
-import { useAdminStore, type UserRole } from '../../store/adminStore';
+import { useAdminStore, type UserRole } from '@/features/admin/stores/admin.store';
 import { motion } from 'framer-motion';
 
 const StaffManagement = () => {
