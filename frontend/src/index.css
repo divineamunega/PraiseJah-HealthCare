@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surface Logic */
+  --color-background: #111319;
+  --color-surface-container-lowest: #0c0e14;
+  --color-surface-container-low: #191b22;
+  --color-surface: #ffffff;
+  --color-surface-bright: #373940;
+  
+  /* Brand/Clinical Accents */
+  --color-clinical-blue: #2563eb;
+  --color-on-surface-variant: #94a3b8;
+  
+  /* Typography */
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-berkeley: "Berkeley Mono", "JetBrains Mono", "Fira Code", monospace;
+
+  /* Elevations */
+  --shadow-surgical: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+@layer base {
+  html, body {
+    @apply bg-background text-white antialiased;
+    font-family: var(--font-inter);
+  }
+
+  h1, h2, h3, h4 {
+    @apply tracking-tight font-semibold text-on-surface-variant;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .clinical-card {
+    @apply bg-surface text-black rounded-none shadow-surgical;
+  }
+  
+  .mono-label {
+    @apply font-berkeley text-[10px] uppercase tracking-wider;
+  }
+  
+  .data-value {
+    @apply font-berkeley font-medium;
+  }
+}
