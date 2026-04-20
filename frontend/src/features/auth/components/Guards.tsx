@@ -35,25 +35,47 @@ export function isSuperAdminOnly(path: string): boolean {
   return SUPER_ADMIN_ONLY_PATHS.some((prefix) => path.startsWith(prefix));
 }
 
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+  </div>
+);
+
 export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 export const RoleGuard = ({ path, children }: { path: string; children: React.ReactNode }) => {
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   if (!user) return <Navigate to="/login" replace />;
-  
+
   if (isSuperAdminOnly(path) && user.role !== 'SUPER_ADMIN') {
     return <Navigate to="/admin" replace />;
   }
-  
+
   if (!canAccess(user.role, path)) return <Navigate to={getRoleHome(user.role)} replace />;
   return <>{children}</>;
 };
 
 export const GuestGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   if (isAuthenticated && user) {
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
