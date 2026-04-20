@@ -1,35 +1,24 @@
 import { create } from 'zustand';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'ADMIN' | 'DOCTOR' | 'NURSE';
-}
+import type { AuthUser } from '../lib/auth';
 
 interface AuthState {
   isAuthenticated: boolean;
   user: AuthUser | null;
-  login: (email: string) => void;
+  login: (user: AuthUser) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   user: null,
-  login: (email) => {
-    // Demo: auto-assign admin role for any login
+  login: (user) =>
     set({
       isAuthenticated: true,
-      user: {
-        id: 'USR-001',
-        email,
-        firstName: 'Demo',
-        lastName: 'Admin',
-        role: 'ADMIN'
-      }
-    });
-  },
-  logout: () => set({ isAuthenticated: false, user: null }),
+      user,
+    }),
+  logout: () =>
+    set({
+      isAuthenticated: false,
+      user: null,
+    }),
 }));
