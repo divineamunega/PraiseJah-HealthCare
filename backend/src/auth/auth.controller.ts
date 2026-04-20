@@ -11,7 +11,9 @@ import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import type { User } from '@prisma/client';
+import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -21,6 +23,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({ status: 200, description: 'Login successful, returns access token and user info' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
     @Req() req: Request,
@@ -57,6 +62,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(200)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Refresh access token using refresh token cookie' })
+  @ApiResponse({ status: 200, description: 'Tokens refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing refresh token' })
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -98,6 +107,9 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'User logout' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -119,6 +131,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password / Activate account' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data or incorrect old password' })
   async changePassword(
     @Req() req: Request,
     @CurrentUser() user: User,
@@ -129,6 +145,8 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'If email exists, a reset link will be sent' })
   async forgotPassword(
     @Req() req: Request,
     @Body() forgotPasswordDto: ForgotPasswordDto,
@@ -138,6 +156,9 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Reset password using token' })
+  @ApiResponse({ status: 200, description: 'Password has been reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async resetPassword(
     @Req() req: Request,
     @Body() resetPasswordDto: ResetPasswordDto,

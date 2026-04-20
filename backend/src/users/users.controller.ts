@@ -16,7 +16,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Audit } from '../audit/decorators/audit.decorator.js';
 import { AuditTargetType } from '@prisma/client';
 import type { User } from '@prisma/client';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) { }
@@ -25,6 +28,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, ActiveStatusGuard)
   @Audit({ action: 'USER_CREATED', targetType: AuditTargetType.USER })
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new user (Admin only)' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() creator,
@@ -34,6 +40,8 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard, ActiveStatusGuard)
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
   async me(@CurrentUser() user: User) {
     const fullUser = await this.userService.findById(user.id);
     const { passwordHash, ...result } = fullUser;
