@@ -111,24 +111,63 @@ export class UsersService {
 
   async updateStatus(id: string, status: any, actor: User) {
     const user = await this.findById(id);
-    
-    // Optional: Add logic to prevent suspending yourself or super admin
+
     if (user.id === actor.id) {
       throw new BadRequestException('You cannot change your own status');
     }
 
-    return this.prisma.user.update({
+    const oldStatus = user.status;
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: { status },
     });
+
+    await this.auditService.createLog({
+      actorId: actor.id,
+      targetType: AuditTargetType.USER,
+      targetId: id,
+      action: 'USER_STATUS_UPDATED',
+      metadata: {
+        oldValue: oldStatus,
+        newValue: status,
+      },
+    });
+
+    return updatedUser;
   }
 
-  async update(id: string, dto: Partial<CreateUserDto>) {
-    await this.findById(id);
-    return this.prisma.user.update({
+  async update(id: string, dto: Partial<CreateUserDto>, actor: User) {
+    const user = await this.findById(id);
+    
+    // Filter out fields that should not be updated via this method or track changes
+    const changes: Record<string, { old: any; new: any }> = {};
+    
+    for (const key in dto) {
+      const newValue = dto[key];
+      const oldValue = (user as any)[key];
+      if (newValue !== oldValue) {
+        changes[key] = { old: oldValue, new: newValue };
+      }
+    }
+
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: dto,
     });
+
+    if (Object.keys(changes).length > 0) {
+      await this.auditService.createLog({
+        actorId: actor.id,
+        targetType: AuditTargetType.USER,
+        targetId: id,
+        action: 'USER_UPDATED',
+        metadata: {
+          changes,
+        },
+      });
+    }
+
+    return updatedUser;
   }
 
   async remove(id: string, actor: User) {

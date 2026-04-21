@@ -91,10 +91,11 @@ export class UsersController {
   @Audit({ action: 'USER_UPDATED', targetType: AuditTargetType.USER })
   @ApiOperation({ summary: 'Update user details (Admin only)' })
   async update(
+    @CurrentUser() actor: User,
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateUserDto>,
   ) {
-    return this.userService.update(id, updateDto);
+    return this.userService.update(id, updateDto, actor);
   }
 
   @Post(':id/delete')
