@@ -12,6 +12,7 @@ import { RouterModule } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { PatientsModule } from './patients/patients.module.js';
 
 configDotenv();
 
@@ -30,6 +31,7 @@ configDotenv();
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     AuditModule,
+    PatientsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
