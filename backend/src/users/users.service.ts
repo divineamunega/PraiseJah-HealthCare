@@ -58,7 +58,7 @@ export class UsersService {
       throw err;
     }
 
-    // 5. Send the welcome and change password email
+    // 4. Send the welcome and change password email
     this.welcomeMailService
       .addWelcomeEmailJob({
         email: user.email,
@@ -90,5 +90,56 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async findAll() {
+    return this.prisma.user.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updateStatus(id: string, status: any, actor: User) {
+    const user = await this.findById(id);
+    
+    // Optional: Add logic to prevent suspending yourself or super admin
+    if (user.id === actor.id) {
+      throw new BadRequestException('You cannot change your own status');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
+  async update(id: string, dto: Partial<CreateUserDto>) {
+    await this.findById(id);
+    return this.prisma.user.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async remove(id: string, actor: User) {
+    const user = await this.findById(id);
+    if (user.id === actor.id) {
+      throw new BadRequestException('You cannot delete yourself');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

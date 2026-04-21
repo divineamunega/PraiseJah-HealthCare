@@ -6,15 +6,18 @@ import {
   HttpStatus,
   UseGuards,
   Post,
+  Param,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UsersService } from './users.service.js';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Audit } from '../audit/decorators/audit.decorator.js';
-import { AuditTargetType } from '@prisma/client';
+import { AuditTargetType, Role } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -25,7 +28,8 @@ export class UsersController {
   constructor(private readonly userService: UsersService) { }
 
   @Post('create')
-  @UseGuards(JwtAuthGuard, ActiveStatusGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Audit({ action: 'USER_CREATED', targetType: AuditTargetType.USER })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new user (Admin only)' })
@@ -46,5 +50,59 @@ export class UsersController {
     const fullUser = await this.userService.findById(user.id);
     const { passwordHash, ...result } = fullUser;
     return result;
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'List all users (Admin only)' })
+  @ApiResponse({ status: 200, description: 'List of users' })
+  async findAll() {
+    return this.userService.findAll();
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Get user by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'User data' })
+  async findOne(@CurrentUser() actor: User, @Param('id') id: string) {
+    const user = await this.userService.findById(id);
+    const { passwordHash, ...result } = user;
+    return result;
+  }
+
+  @Post(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Audit({ action: 'USER_STATUS_UPDATED', targetType: AuditTargetType.USER })
+  @ApiOperation({ summary: 'Update user status (Admin only)' })
+  async updateStatus(
+    @CurrentUser() actor: User,
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    return this.userService.updateStatus(id, status, actor);
+  }
+
+  @Post(':id/update')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Audit({ action: 'USER_UPDATED', targetType: AuditTargetType.USER })
+  @ApiOperation({ summary: 'Update user details (Admin only)' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: Partial<CreateUserDto>,
+  ) {
+    return this.userService.update(id, updateDto);
+  }
+
+  @Post(':id/delete')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Audit({ action: 'USER_DELETED', targetType: AuditTargetType.USER })
+  @ApiOperation({ summary: 'Soft delete user (Admin only)' })
+  async remove(@CurrentUser() actor: User, @Param('id') id: string) {
+    return this.userService.remove(id, actor);
   }
 }
