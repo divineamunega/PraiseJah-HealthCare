@@ -16,7 +16,7 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
-  app.useGlobalPipes(new ValidationPipe({ stopAtFirstError: true }));
+  app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
   app.useGlobalInterceptors(new LoggingInterceptor(logger), new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter(logger));
