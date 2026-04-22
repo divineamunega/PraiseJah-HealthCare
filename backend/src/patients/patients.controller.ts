@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { PatientsService } from './patients.service.js';
 import { CreatePatientDto } from './dto/create-patient.dto.js';
@@ -21,7 +22,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { AuditTargetType, AuditAction, Role } from '@prisma/client';
 import type { User } from '@prisma/client';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { AuditInterceptor } from '../audit/interceptors/audit.interceptor.js';
 import { Audit } from '../audit/decorators/audit.decorator.js';
 
@@ -71,6 +72,9 @@ export class PatientsController {
     @Body() updatePatientDto: UpdatePatientDto,
     @CurrentUser() user: User,
   ) {
+    if (!updatePatientDto || Object.keys(updatePatientDto).length === 0) {
+      throw new BadRequestException('No update data provided');
+    }
     return this.patientsService.update(id, updatePatientDto, user);
   }
 

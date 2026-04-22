@@ -7,6 +7,7 @@ import {
   UseGuards,
   Post,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UsersService } from './users.service.js';
@@ -95,6 +96,9 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateUserDto>,
   ) {
+    if (!updateDto || Object.keys(updateDto).length === 0) {
+      throw new BadRequestException('No update data provided');
+    }
     return this.userService.update(id, updateDto, actor);
   }
 
