@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   UserPlus,
-  Calendar,
   Clock,
   Users,
   Search,
@@ -161,6 +160,8 @@ const Secretary_Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch real patients
+  // Note: axios interceptor unwraps the backend { success: true, data: [...] } structure
+  // So 'patients' here is directly the array (or object if paginated, but your JSON showed the array)
   const { data: patientsData, isLoading } = usePatients({ 
     name: searchTerm || undefined,
     limit: 5,
@@ -168,7 +169,10 @@ const Secretary_Dashboard = () => {
     sortOrder: 'desc'
   });
 
-  const patients = patientsData?.data || [];
+  // Handle both array and paginated object (just in case)
+  const patients = Array.isArray(patientsData) 
+    ? patientsData 
+    : (patientsData as any)?.data || [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -205,7 +209,6 @@ const Secretary_Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats - Still mock until visits/queue are ready */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "WAITING", value: 3, icon: Clock, color: "text-yellow-400" },
@@ -224,7 +227,6 @@ const Secretary_Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Real Patient List (Search Results) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-on-surface-variant flex items-center gap-2">
@@ -237,7 +239,7 @@ const Secretary_Dashboard = () => {
           </div>
 
           <div className="space-y-3">
-            {patients.length > 0 ? patients.map((patient) => (
+            {patients.length > 0 ? patients.map((patient: any) => (
               <div
                 key={patient.id}
                 className="bg-surface-container-low p-4 flex items-center justify-between group hover:bg-surface-bright/10 transition-colors cursor-pointer border border-white/5"
@@ -272,7 +274,6 @@ const Secretary_Dashboard = () => {
           </div>
         </div>
 
-        {/* Placeholder for Recent Visits / Queue until Visit module is ready */}
         <div className="space-y-4 opacity-50">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-on-surface-variant flex items-center gap-2">
