@@ -22,7 +22,6 @@ export class PatientsService {
     address: true,
     createdAt: true,
     updatedAt: true,
-    // deletedAt is omitted
   };
 
   constructor(
@@ -62,7 +61,7 @@ export class PatientsService {
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortBy === 'name' ? undefined : sortOrder }, // Basic fix for Prisma order by
+        orderBy: { [sortBy]: sortBy === 'name' ? undefined : sortOrder },
         select: this.patientSelect,
       }),
       this.prisma.patient.count({ where }),
@@ -79,34 +78,25 @@ export class PatientsService {
   }
 
   async findOne(id: string): Promise<Partial<Patient>> {
-    const patient = await this.prisma.patient.findUnique({
-      where: { id },
+    const patient = await this.prisma.patient.findFirst({
+      where: { id, deletedAt: null },
       select: this.patientSelect,
     });
 
-    // Check if patient exists (Prisma findUnique with select returns null if not found)
-    // We still need to check deletedAt manually if we don't include it in select,
-    // but the findUnique query doesn't allow filtering by deletedAt: null directly on ID.
-    // However, we can fetch deletedAt specifically for the check.
-    
-    const check = await this.prisma.patient.findUnique({
-      where: { id },
-      select: { deletedAt: true }
-    });
-
-    if (!check || check.deletedAt) {
+    if (!patient) {
       throw new NotFoundException(`Patient with ID ${id} not found`);
     }
 
-    return patient!;
+    return patient;
   }
 
   async update(id: string, dto: UpdatePatientDto, actor: User): Promise<Partial<Patient>> {
-    const existingPatient = await this.prisma.patient.findUnique({
-      where: { id },
+    // We fetch the full object (including internal fields) for the audit log before updating
+    const existingPatient = await this.prisma.patient.findFirst({
+      where: { id, deletedAt: null },
     });
 
-    if (!existingPatient || existingPatient.deletedAt) {
+    if (!existingPatient) {
       throw new NotFoundException(`Patient with ID ${id} not found`);
     }
 
@@ -116,7 +106,6 @@ export class PatientsService {
       select: this.patientSelect,
     });
 
-    // Manual audit for updates to capture old vs new values
     await this.auditService.createLog({
       actorId: actor.id,
       action: AuditAction.PATIENT_UPDATED,
@@ -132,12 +121,12 @@ export class PatientsService {
   }
 
   async remove(id: string): Promise<void> {
-    const check = await this.prisma.patient.findUnique({
-      where: { id },
-      select: { deletedAt: true }
+    const patient = await this.prisma.patient.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true }
     });
 
-    if (!check || check.deletedAt) {
+    if (!patient) {
       throw new NotFoundException(`Patient with ID ${id} not found`);
     }
 
