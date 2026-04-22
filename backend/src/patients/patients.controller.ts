@@ -15,8 +15,10 @@ import { CreatePatientDto } from './dto/create-patient.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { PatientQueryDto } from './dto/patient-query.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
-import { AuditTargetType, AuditAction } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { AuditTargetType, AuditAction, Role } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { AuditInterceptor } from '../audit/interceptors/audit.interceptor.js';
@@ -31,6 +33,8 @@ export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SECRETARY, Role.NURSE, Role.DOCTOR)
   @ApiOperation({ summary: 'Create a new patient' })
   @Audit({ action: AuditAction.PATIENT_CREATED, targetType: AuditTargetType.PATIENT })
   @ApiResponse({ status: 201, description: 'The patient has been successfully created.' })
@@ -47,7 +51,7 @@ export class PatientsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a patient by ID' })
-  @Audit({ action: AuditAction.PATIENT_CREATED, targetType: AuditTargetType.PATIENT })
+  @Audit({ action: AuditAction.PATIENT_VIEWED, targetType: AuditTargetType.PATIENT })
   @ApiResponse({ status: 200, description: 'The patient details.' })
   @ApiResponse({ status: 404, description: 'Patient not found.' })
   findOne(@Param('id') id: string) {
@@ -55,6 +59,8 @@ export class PatientsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SECRETARY, Role.NURSE, Role.DOCTOR)
   @ApiOperation({ summary: 'Update a patient' })
   @Audit({ action: AuditAction.PATIENT_UPDATED, targetType: AuditTargetType.PATIENT })
   @ApiResponse({ status: 200, description: 'The patient has been successfully updated.' })
@@ -68,8 +74,10 @@ export class PatientsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Soft-delete a patient' })
-  @Audit({ action: 'PATIENT_DELETED', targetType: AuditTargetType.PATIENT })
+  @Audit({ action: AuditAction.PATIENT_DELETED, targetType: AuditTargetType.PATIENT })
   @ApiResponse({ status: 200, description: 'The patient has been successfully deleted.' })
   @ApiResponse({ status: 404, description: 'Patient not found.' })
   remove(@Param('id') id: string) {
