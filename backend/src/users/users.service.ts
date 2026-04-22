@@ -74,7 +74,7 @@ export class UsersService {
   async findUniqueByEmail(email: string) {
     try {
       const user = await this.prisma.user.findUniqueOrThrow({
-        where: { email },
+        where: { email, status: { not: "SUSPENDED" }, deletedAt: null },
       });
       return user;
     } catch (err: any) {
@@ -138,10 +138,10 @@ export class UsersService {
 
   async update(id: string, dto: Partial<CreateUserDto>, actor: User) {
     const user = await this.findById(id);
-    
+
     // Filter out fields that should not be updated via this method or track changes
     const changes: Record<string, { old: any; new: any }> = {};
-    
+
     for (const key in dto) {
       const newValue = dto[key];
       const oldValue = (user as any)[key];

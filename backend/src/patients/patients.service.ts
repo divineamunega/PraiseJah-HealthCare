@@ -16,11 +16,17 @@ export class PatientsService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
-  async create(dto: CreatePatientDto): Promise<Patient> {
+  async create(dto: CreatePatientDto): Promise<Partial<Patient>> {
     return this.prisma.patient.create({
       data: dto,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        dateOfBirth: true,
+      }
     });
   }
 
@@ -33,11 +39,11 @@ export class PatientsService {
       AND: [
         name
           ? {
-              OR: [
-                { firstName: { contains: name, mode: 'insensitive' } },
-                { lastName: { contains: name, mode: 'insensitive' } },
-              ],
-            }
+            OR: [
+              { firstName: { contains: name, mode: 'insensitive' } },
+              { lastName: { contains: name, mode: 'insensitive' } },
+            ],
+          }
           : {},
         phone ? { phone: { contains: phone } } : {},
       ],
