@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable, tap } from 'rxjs';
 import { AuditService } from '../audit.service.js';
 import { AUDIT_METADATA_KEY, AuditOptions } from '../decorators/audit.decorator.js';
+import { AuditAction } from '@prisma/client';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
@@ -54,7 +55,7 @@ export class AuditInterceptor implements NestInterceptor {
           // Log failure
           this.auditService.createLog({
             actorId: user?.id,
-            action: `${auditOptions.action}_FAILURE`,
+            action: `${auditOptions.action}_FAILURE` as AuditAction,
             targetType: auditOptions.targetType,
             targetId: request.params?.id,
             ipAddress: ip,

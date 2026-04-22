@@ -1,8 +1,8 @@
 import { SetMetadata } from '@nestjs/common';
-import { AuditTargetType } from '@prisma/client';
+import { AuditTargetType, AuditAction } from '@prisma/client';
 
 export interface AuditOptions {
-  action: string;
+  action: AuditAction;
   targetType?: AuditTargetType;
 }
 

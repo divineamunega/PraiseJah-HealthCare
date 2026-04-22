@@ -3,7 +3,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Patient, User, AuditTargetType, Prisma } from '@prisma/client';
+import { Patient, User, AuditTargetType, AuditAction, Prisma } from '@prisma/client';
 import { CreatePatientDto } from './dto/create-patient.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
@@ -92,7 +92,7 @@ export class PatientsService {
     // Manual audit for updates to capture old vs new values
     await this.auditService.createLog({
       actorId: actor.id,
-      action: 'PATIENT_UPDATED_DETAILED',
+      action: AuditAction.PATIENT_UPDATED,
       targetType: AuditTargetType.PATIENT,
       targetId: id,
       metadata: {

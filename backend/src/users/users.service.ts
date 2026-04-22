@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { AuditTargetType, User } from '@prisma/client';
+import { AuditTargetType, AuditAction, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { RoleCreationMap } from './constants/role.constants.js';
@@ -126,7 +126,7 @@ export class UsersService {
       actorId: actor.id,
       targetType: AuditTargetType.USER,
       targetId: id,
-      action: 'USER_STATUS_UPDATED',
+      action: AuditAction.USER_STATUS_UPDATED,
       metadata: {
         oldValue: oldStatus,
         newValue: status,
@@ -160,7 +160,7 @@ export class UsersService {
         actorId: actor.id,
         targetType: AuditTargetType.USER,
         targetId: id,
-        action: 'USER_UPDATED',
+        action: AuditAction.USER_UPDATED,
         metadata: {
           changes,
         },

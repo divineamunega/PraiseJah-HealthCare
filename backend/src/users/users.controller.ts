@@ -17,7 +17,7 @@ import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Audit } from '../audit/decorators/audit.decorator.js';
-import { AuditTargetType, Role } from '@prisma/client';
+import { AuditTargetType, AuditAction, Role } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -30,7 +30,7 @@ export class UsersController {
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @Audit({ action: 'USER_CREATED', targetType: AuditTargetType.USER })
+  @Audit({ action: AuditAction.USER_CREATED, targetType: AuditTargetType.USER })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new user (Admin only)' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
@@ -75,7 +75,7 @@ export class UsersController {
   @Post(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @Audit({ action: 'USER_STATUS_UPDATED', targetType: AuditTargetType.USER })
+  @Audit({ action: AuditAction.USER_STATUS_UPDATED, targetType: AuditTargetType.USER })
   @ApiOperation({ summary: 'Update user status (Admin only)' })
   async updateStatus(
     @CurrentUser() actor: User,
@@ -88,7 +88,7 @@ export class UsersController {
   @Post(':id/update')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @Audit({ action: 'USER_UPDATED', targetType: AuditTargetType.USER })
+  @Audit({ action: AuditAction.USER_UPDATED, targetType: AuditTargetType.USER })
   @ApiOperation({ summary: 'Update user details (Admin only)' })
   async update(
     @CurrentUser() actor: User,
@@ -101,7 +101,7 @@ export class UsersController {
   @Post(':id/delete')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @Audit({ action: 'USER_DELETED', targetType: AuditTargetType.USER })
+  @Audit({ action: AuditAction.USER_DELETED, targetType: AuditTargetType.USER })
   @ApiOperation({ summary: 'Soft delete user (Admin only)' })
   async remove(@CurrentUser() actor: User, @Param('id') id: string) {
     return this.userService.remove(id, actor);

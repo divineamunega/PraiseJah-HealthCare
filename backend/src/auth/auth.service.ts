@@ -14,7 +14,7 @@ import ms from 'ms';
 import LoginDto from './dto/login.dto.js';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../audit/audit.service.js';
-import { AuditTargetType, ActiveStatus, Prisma } from '@prisma/client';
+import { AuditTargetType, AuditAction, ActiveStatus, Prisma } from '@prisma/client';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
@@ -48,7 +48,7 @@ export class AuthService {
       // 3. throw an error if the password is incorrect
       if (!isCorrect) {
         await this.auditService.createLog({
-          action: 'LOGIN_FAILURE',
+          action: AuditAction.LOGIN_FAILURE,
           entity: 'USER',
           metadata: { email: loginDto.email, reason: 'Incorrect password' },
           ipAddress: requestInfo.ip,
@@ -67,7 +67,7 @@ export class AuthService {
         actorId: user.id,
         targetType: AuditTargetType.USER,
         targetId: user.id,
-        action: 'LOGIN_SUCCESS',
+        action: AuditAction.LOGIN_SUCCESS,
         ipAddress: requestInfo.ip,
         userAgent: requestInfo.userAgent || undefined,
         correlationId: requestInfo.correlationId,
@@ -78,7 +78,7 @@ export class AuthService {
       if (err instanceof UnauthorizedException) throw err;
 
       await this.auditService.createLog({
-        action: 'LOGIN_FAILURE',
+        action: AuditAction.LOGIN_FAILURE,
         entity: 'USER',
         metadata: { email: loginDto.email, reason: err.message || 'Unknown failure' },
         ipAddress: requestInfo.ip,
@@ -162,7 +162,7 @@ export class AuthService {
 
         await this.auditService.createLog({
           actorId: record.userId,
-          action: 'LOGOUT',
+          action: AuditAction.LOGOUT,
           targetType: AuditTargetType.USER,
           targetId: record.userId,
           correlationId,
@@ -190,7 +190,7 @@ export class AuthService {
           actorId: userId,
           targetType: AuditTargetType.USER,
           targetId: userId,
-          action: 'PASSWORD_CHANGE_FAILURE',
+          action: AuditAction.PASSWORD_CHANGE_FAILURE,
           metadata: { reason: 'Incorrect old password' },
           correlationId,
         });
@@ -223,7 +223,7 @@ export class AuthService {
         actorId: userId,
         targetType: AuditTargetType.USER,
         targetId: userId,
-        action: 'PASSWORD_CHANGE_SUCCESS',
+        action: AuditAction.PASSWORD_CHANGE_SUCCESS,
         metadata: { activated: user.status === ActiveStatus.PENDING },
         correlationId,
       });
@@ -272,7 +272,7 @@ export class AuthService {
       actorId: user.id,
       targetType: AuditTargetType.USER,
       targetId: user.id,
-      action: 'PASSWORD_RESET_REQUESTED',
+      action: AuditAction.PASSWORD_RESET_REQUESTED,
       correlationId,
     });
 
@@ -321,7 +321,7 @@ export class AuthService {
       actorId: targetUser.id,
       targetType: AuditTargetType.USER,
       targetId: targetUser.id,
-      action: 'PASSWORD_RESET_SUCCESS',
+      action: AuditAction.PASSWORD_RESET_SUCCESS,
       correlationId,
     });
 

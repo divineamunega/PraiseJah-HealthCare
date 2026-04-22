@@ -60,7 +60,44 @@ enum AuditTargetType {
   QUEUE_ENTRY
 }
 
+enum AuditAction {
+  // User Actions
+  USER_CREATED
+  USER_UPDATED
+  USER_STATUS_UPDATED
+  USER_DELETED
+  
+  // Auth Actions
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  LOGOUT
+  PASSWORD_CHANGE_SUCCESS
+  PASSWORD_CHANGE_FAILURE
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_SUCCESS
+  
+  // Patient Actions
+  PATIENT_CREATED
+  PATIENT_UPDATED
+  PATIENT_DELETED
+  
+  // Visit Actions
+  VISIT_CREATED
+  VISIT_UPDATED
+  VISIT_COMPLETED
+  
+  // Clinical Actions
+  VITALS_RECORDED
+  CLINICAL_NOTE_ADDED
+  DIAGNOSIS_ADDED
+  PRESCRIPTION_ISSUED
+  LAB_ORDER_CREATED
+}
+
 // ============================================================
+// USER
+// ============================================================
+
 //  USER
 // ============================================================
 
@@ -304,21 +341,20 @@ model LabOrder {
 // ============================================================
 //  AUDIT LOG
 // ============================================================
-
 model AuditLog {
   id String @id @default(uuid())
 
   // Who performed the action (the staff member)
   actorId String?
-  actor   User?   @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  actor User? @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
 
   // What was affected
   targetType AuditTargetType?
-  targetId   String?
+  targetId String?
 
   // Action details
-  action   String // e.g. "USER_CREATED", "VISIT_UPDATED", "VITALS_RECORDED", "LOGIN_SUCCESS"
-  entity   String? // You can keep this or turn it into an enum later
+  action AuditAction
+  entity String? // You can keep this or turn it into an enum later
   entityId String?
 
   // Rich context (very useful for EMR auditing)
