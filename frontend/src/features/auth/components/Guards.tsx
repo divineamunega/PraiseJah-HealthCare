@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { useAuthStore } from '../stores/auth.store';
 
 type Role = string;
@@ -43,13 +43,28 @@ const LoadingSpinner = () => (
 );
 
 export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, user, isLoading } = useAuthStore();
+  const location = useLocation();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect PENDING users to change-password if they aren't already there
+  if (user?.status === 'PENDING' && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
+  }
+
+  // Prevent ACTIVE users from going to change-password
+  if (user?.status === 'ACTIVE' && location.pathname === '/change-password') {
+    return <Navigate to={getRoleHome(user.role)} replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export const RoleGuard = ({ path, children }: { path: string; children: React.ReactNode }) => {
@@ -60,6 +75,8 @@ export const RoleGuard = ({ path, children }: { path: string; children: React.Re
   }
 
   if (!user) return <Navigate to="/login" replace />;
+
+  if (user.status === 'PENDING') return <Navigate to="/change-password" replace />;
 
   if (isSuperAdminOnly(path) && user.role !== 'SUPER_ADMIN') {
     return <Navigate to="/admin" replace />;
@@ -77,6 +94,7 @@ export const GuestGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (isAuthenticated && user) {
+    if (user.status === 'PENDING') return <Navigate to="/change-password" replace />;
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
   return <>{children}</>;

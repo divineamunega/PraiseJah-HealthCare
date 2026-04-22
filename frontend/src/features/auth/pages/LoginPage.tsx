@@ -16,6 +16,12 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const data = await login.mutateAsync({ email, password });
+      
+      if (data.user.status === 'PENDING') {
+        navigate('/change-password');
+        return;
+      }
+
       const role = data.user.role.toLowerCase();
       navigate(role === 'admin' ? '/admin' : `/${role}`);
     } catch (err: any) {

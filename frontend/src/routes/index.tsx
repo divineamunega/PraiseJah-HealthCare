@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
+import ChangePasswordPage from '@/features/auth/pages/ChangePasswordPage';
 import DashboardLayout from '@/components/shared/layout/DashboardLayout';
 import AdminOverview from '@/features/admin/pages/Overview';
 import StaffManagement from '@/features/admin/pages/StaffManagement';
@@ -20,6 +21,7 @@ import { AuthGuard, RoleGuard, GuestGuard, getRoleHome } from '@/features/auth/c
 const DefaultRedirect = () => {
   const { user } = useAuthStore();
   if (!user) return <Navigate to="/login" replace />;
+  if (user.status === 'PENDING') return <Navigate to="/change-password" replace />;
   return <Navigate to={getRoleHome(user.role)} replace />;
 };
 
@@ -29,10 +31,11 @@ const AppRoutes = () => {
       <Route path="/login" element={<GuestGuard><LoginPage /></GuestGuard>} />
       <Route path="/forgot-password" element={<GuestGuard><ForgotPasswordPage /></GuestGuard>} />
       <Route path="/reset-password" element={<GuestGuard><ResetPasswordPage /></GuestGuard>} />
+      <Route path="/change-password" element={<AuthGuard><ChangePasswordPage /></AuthGuard>} />
 
       <Route path="/" element={<AuthGuard><DashboardLayout /></AuthGuard>}>
         <Route index element={<DefaultRedirect />} />
-
+...
         {/* Admin Routes */}
         <Route path="admin" element={<RoleGuard path="/admin"><AdminOverview /></RoleGuard>} />
         <Route path="admin/staff" element={<RoleGuard path="/admin"><StaffManagement /></RoleGuard>} />

@@ -16,6 +16,7 @@ import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { PatientQueryDto } from './dto/patient-query.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { AuditTargetType, AuditAction, Role } from '@prisma/client';
@@ -26,14 +27,14 @@ import { Audit } from '../audit/decorators/audit.decorator.js';
 
 @ApiTags('patients')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveStatusGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SECRETARY, Role.NURSE, Role.DOCTOR)
   @ApiOperation({ summary: 'Create a new patient' })
   @Audit({ action: AuditAction.PATIENT_CREATED, targetType: AuditTargetType.PATIENT })
@@ -59,7 +60,7 @@ export class PatientsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SECRETARY, Role.NURSE, Role.DOCTOR)
   @ApiOperation({ summary: 'Update a patient' })
   @Audit({ action: AuditAction.PATIENT_UPDATED, targetType: AuditTargetType.PATIENT })
@@ -74,7 +75,7 @@ export class PatientsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Soft-delete a patient' })
   @Audit({ action: AuditAction.PATIENT_DELETED, targetType: AuditTargetType.PATIENT })
