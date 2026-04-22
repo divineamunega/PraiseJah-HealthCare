@@ -12,6 +12,19 @@ import { PatientQueryDto } from './dto/patient-query.dto.js';
 
 @Injectable()
 export class PatientsService {
+  private readonly patientSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    dateOfBirth: true,
+    sex: true,
+    phone: true,
+    address: true,
+    createdAt: true,
+    updatedAt: true,
+    // deletedAt is omitted
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
@@ -21,12 +34,7 @@ export class PatientsService {
   async create(dto: CreatePatientDto): Promise<Partial<Patient>> {
     return this.prisma.patient.create({
       data: dto,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        dateOfBirth: true,
-      }
+      select: this.patientSelect,
     });
   }
 
@@ -54,7 +62,8 @@ export class PatientsService {
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy]: sortBy === 'name' ? undefined : sortOrder }, // Basic fix for Prisma order by
+        select: this.patientSelect,
       }),
       this.prisma.patient.count({ where }),
     ]);
@@ -69,24 +78,42 @@ export class PatientsService {
     };
   }
 
-  async findOne(id: string): Promise<Patient> {
+  async findOne(id: string): Promise<Partial<Patient>> {
     const patient = await this.prisma.patient.findUnique({
       where: { id },
+      select: this.patientSelect,
     });
 
-    if (!patient || patient.deletedAt) {
+    // Check if patient exists (Prisma findUnique with select returns null if not found)
+    // We still need to check deletedAt manually if we don't include it in select,
+    // but the findUnique query doesn't allow filtering by deletedAt: null directly on ID.
+    // However, we can fetch deletedAt specifically for the check.
+    
+    const check = await this.prisma.patient.findUnique({
+      where: { id },
+      select: { deletedAt: true }
+    });
+
+    if (!check || check.deletedAt) {
       throw new NotFoundException(`Patient with ID ${id} not found`);
     }
 
-    return patient;
+    return patient!;
   }
 
-  async update(id: string, dto: UpdatePatientDto, actor: User): Promise<Patient> {
-    const existingPatient = await this.findOne(id);
+  async update(id: string, dto: UpdatePatientDto, actor: User): Promise<Partial<Patient>> {
+    const existingPatient = await this.prisma.patient.findUnique({
+      where: { id },
+    });
+
+    if (!existingPatient || existingPatient.deletedAt) {
+      throw new NotFoundException(`Patient with ID ${id} not found`);
+    }
 
     const updatedPatient = await this.prisma.patient.update({
       where: { id },
       data: dto,
+      select: this.patientSelect,
     });
 
     // Manual audit for updates to capture old vs new values
@@ -105,7 +132,14 @@ export class PatientsService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const check = await this.prisma.patient.findUnique({
+      where: { id },
+      select: { deletedAt: true }
+    });
+
+    if (!check || check.deletedAt) {
+      throw new NotFoundException(`Patient with ID ${id} not found`);
+    }
 
     await this.prisma.patient.update({
       where: { id },
