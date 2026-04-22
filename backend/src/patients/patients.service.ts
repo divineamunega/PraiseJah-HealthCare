@@ -61,7 +61,7 @@ export class PatientsService {
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortBy === 'name' ? undefined : sortOrder },
+        orderBy: { [sortBy]: sortOrder },
         select: this.patientSelect,
       }),
       this.prisma.patient.count({ where }),
