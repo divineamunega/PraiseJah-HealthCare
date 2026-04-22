@@ -4,8 +4,9 @@ import {
   IsString,
   IsEnum,
   IsOptional,
-  IsDateString,
+  IsDate,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Sex } from '@prisma/client';
 
 export class CreatePatientDto {
@@ -21,8 +22,9 @@ export class CreatePatientDto {
 
   @ApiProperty({ example: '1990-01-01', description: 'ISO 8601 date string' })
   @IsNotEmpty()
-  @IsDateString()
-  readonly dateOfBirth!: string;
+  @Type(() => Date)
+  @IsDate()
+  readonly dateOfBirth!: Date;
 
   @ApiProperty({ enum: Sex, example: Sex.MALE })
   @IsEnum(Sex, { message: 'sex must be a valid Sex enum value' })

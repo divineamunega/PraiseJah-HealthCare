@@ -20,10 +20,7 @@ export class PatientsService {
 
   async create(dto: CreatePatientDto): Promise<Patient> {
     return this.prisma.patient.create({
-      data: {
-        ...dto,
-        dateOfBirth: new Date(dto.dateOfBirth),
-      },
+      data: dto,
     });
   }
 
@@ -83,10 +80,7 @@ export class PatientsService {
 
     const updatedPatient = await this.prisma.patient.update({
       where: { id },
-      data: {
-        ...dto,
-        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
-      },
+      data: dto,
     });
 
     // Manual audit for updates to capture old vs new values
