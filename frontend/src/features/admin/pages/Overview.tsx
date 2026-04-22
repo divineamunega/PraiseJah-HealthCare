@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/features/auth/stores/auth.store';
+import { useUsers } from '@/features/admin/hooks/useUsers';
 import {
   ShieldCheck,
   Users,
@@ -7,16 +8,18 @@ import {
   ClipboardList,
   Stethoscope,
   FileText,
+  Loader2,
 } from 'lucide-react';
 
 const SUPER_ADMIN_AdminOverview = () => {
-  const { user } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
+  const { users, isLoading } = useUsers();
 
   const metrics = {
-    totalStaff: 12,
-    activeUsers: 10,
-    suspendedUsers: 2,
-    pendingActivation: 3,
+    totalStaff: users.length,
+    activeUsers: users.filter(u => u.status === 'ACTIVE').length,
+    suspendedUsers: users.filter(u => u.status === 'SUSPENDED').length,
+    pendingActivation: users.filter(u => u.status === 'PENDING').length,
   };
 
   const queueMetrics = {
@@ -50,11 +53,14 @@ const SUPER_ADMIN_AdminOverview = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <p className="mono-label text-clinical-blue mb-1 uppercase">Administrative Command Center</p>
-        <h1 className="text-3xl font-bold text-white tracking-tighter">
-          Welcome, {user?.firstName}
-        </h1>
+      <div className="flex justify-between items-end">
+        <div>
+          <p className="mono-label text-clinical-blue mb-1 uppercase">Administrative Command Center</p>
+          <h1 className="text-3xl font-bold text-white tracking-tighter">
+            Welcome, {currentUser?.firstName}
+          </h1>
+        </div>
+        {isLoading && <Loader2 className="animate-spin text-clinical-blue mb-2" size={20} />}
       </div>
 
       {/* Staff Metrics */}
@@ -70,7 +76,9 @@ const SUPER_ADMIN_AdminOverview = () => {
               <stat.icon size={14} className={stat.color} />
               <span className="mono-label text-on-surface-variant">{stat.label}</span>
             </div>
-            <p className="text-4xl font-bold text-white data-value">{stat.value}</p>
+            <p className="text-4xl font-bold text-white data-value">
+              {isLoading ? '...' : stat.value}
+            </p>
           </div>
         ))}
       </div>
