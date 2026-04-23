@@ -28,6 +28,7 @@ export interface PatientQuery {
   limit?: number;
   name?: string;
   phone?: string;
+  sex?: Sex;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

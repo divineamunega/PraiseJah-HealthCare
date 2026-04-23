@@ -7,6 +7,15 @@ export enum PatientSortBy {
   LAST_NAME = 'lastName',
   CREATED_AT = 'createdAt',
   DATE_OF_BIRTH = 'dateOfBirth',
+  SEX = 'sex',
+  PHONE = 'phone',
+  ID = 'id',
+}
+
+export enum Sex {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
 }
 
 export class PatientQueryDto extends PaginationDto {
@@ -19,6 +28,11 @@ export class PatientQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiPropertyOptional({ enum: Sex, description: 'Filter by gender' })
+  @IsOptional()
+  @IsEnum(Sex)
+  sex?: Sex;
 
   @ApiPropertyOptional({ enum: PatientSortBy, default: PatientSortBy.CREATED_AT })
   @IsEnum(PatientSortBy)

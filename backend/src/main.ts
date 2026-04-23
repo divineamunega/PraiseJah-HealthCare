@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
+import { DevDelayInterceptor } from './common/interceptors/dev-delay.interceptor.js';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { LoggerService } from './logger/logger.service.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -22,7 +23,11 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
   }));
   app.use(cookieParser());
-  app.useGlobalInterceptors(new LoggingInterceptor(logger), new TransformInterceptor());
+  app.useGlobalInterceptors(
+    new DevDelayInterceptor(),
+    new LoggingInterceptor(logger), 
+    new TransformInterceptor()
+  );
   app.useGlobalFilters(new AllExceptionsFilter(logger));
 
   // Swagger Configuration

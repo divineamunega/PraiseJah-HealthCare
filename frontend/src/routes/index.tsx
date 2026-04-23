@@ -14,6 +14,7 @@ import RolePermissions from '@/features/admin/pages/RolePermissions';
 import DoctorDashboard from '@/features/clinical/pages/DoctorDashboard';
 import NurseDashboard from '@/features/clinical/pages/NurseDashboard';
 import SecretaryDashboard from '@/features/clinical/pages/SecretaryDashboard';
+import PatientListPage from '@/features/clinical/pages/PatientListPage';
 
 import { useAuthStore } from '@/features/auth/stores/auth.store';
 import { AuthGuard, RoleGuard, GuestGuard, getRoleHome } from '@/features/auth/components/Guards';
@@ -52,9 +53,11 @@ const AppRoutes = () => {
 
         {/* Nurse Routes */}
         <Route path="nurse" element={<RoleGuard path="/nurse"><NurseDashboard /></RoleGuard>} />
+        <Route path="nurse/patients" element={<RoleGuard path="/nurse"><PatientListPage /></RoleGuard>} />
 
         {/* Secretary Routes */}
         <Route path="secretary" element={<RoleGuard path="/secretary"><SecretaryDashboard /></RoleGuard>} />
+        <Route path="secretary/patients" element={<RoleGuard path="/secretary"><PatientListPage /></RoleGuard>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

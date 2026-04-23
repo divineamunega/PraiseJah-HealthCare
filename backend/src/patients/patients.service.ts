@@ -38,7 +38,7 @@ export class PatientsService {
   }
 
   async findAll(queryDto: PatientQueryDto) {
-    const { page, limit, name, phone, sortBy, sortOrder } = queryDto;
+    const { page, limit, name, phone, sex, sortBy, sortOrder } = queryDto;
     const skip = (page - 1) * limit;
 
     const where: Prisma.PatientWhereInput = {
@@ -53,6 +53,7 @@ export class PatientsService {
           }
           : {},
         phone ? { phone: { contains: phone } } : {},
+        sex ? { sex } : {},
       ],
     };
 

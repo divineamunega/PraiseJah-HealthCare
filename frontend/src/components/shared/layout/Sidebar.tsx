@@ -47,16 +47,14 @@ const navItems: NavItem[] = [
   { id: 'doctor_prescriptions', path: '/doctor/prescriptions', icon: Activity, label: 'Prescriptions', roles: ['DOCTOR'] },
 
   // Nurse Routes
-  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Triage Station', roles: ['NURSE', 'SECRETARY'] },
-  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Queue Management', roles: ['NURSE', 'SECRETARY'] },
+  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Triage Station', roles: ['NURSE'] },
+  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Queue Management', roles: ['NURSE'] },
   { id: 'nurse_vitals', path: '/nurse/vitals', icon: Thermometer, label: 'Vitals Recording', roles: ['NURSE'] },
-  { id: 'nurse_patients', path: '/nurse/patients', icon: Users, label: 'Patient List', roles: ['NURSE', 'SECRETARY'] },
+  { id: 'nurse_patients', path: '/nurse/patients', icon: Users, label: 'Patient List', roles: ['NURSE'] },
 
   // Secretary Routes
   { id: 'secretary_dash', path: '/secretary', icon: LayoutDashboard, label: 'Front Desk', roles: ['SECRETARY'] },
-  { id: 'secretary_schedule', path: '/secretary/schedule', icon: Calendar, label: 'Appointments', roles: ['SECRETARY'] },
-  { id: 'secretary_checkin', path: '/secretary/checkin', icon: UserPlus, label: 'Patient Check-In', roles: ['SECRETARY'] },
-  { id: 'secretary_visits', path: '/secretary/visits', icon: FileText, label: 'Visit Management', roles: ['SECRETARY'] },
+  { id: 'secretary_patients', path: '/secretary/patients', icon: Users, label: 'Patient List', roles: ['SECRETARY'] },
 ];
 
 const Sidebar = () => {

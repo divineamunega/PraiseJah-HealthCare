@@ -29,9 +29,15 @@ export class TransformInterceptor<T>
       map((data) => {
         const hasDataField = data && typeof data === 'object' && 'data' in data;
         const hasMessageField = data && typeof data === 'object' && 'message' in data;
+        const hasMetaField = data && typeof data === 'object' && 'meta' in data;
 
         const message = data?.message || 'Request successful';
         let resultData = hasDataField ? data.data : data;
+
+        // If the response has both data and meta fields (paginated response), preserve the entire structure
+        if (hasDataField && hasMetaField) {
+          resultData = data;
+        }
 
         // If the original data only contained a message, we should probably return null for data
         // to avoid { message: "...", data: { message: "..." } }

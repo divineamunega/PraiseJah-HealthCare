@@ -12,6 +12,9 @@ export function usePatients(query?: PatientQuery) {
   return useQuery({
     queryKey: PATIENT_KEYS.list(query),
     queryFn: () => patientsApi.findAll(query),
+    placeholderData: (previousData) => previousData,
+    staleTime: 5000,
+    gcTime: 30000,
   });
 }
 
