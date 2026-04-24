@@ -11,15 +11,20 @@ export const useClinicalSocket = () => {
   useEffect(() => {
     // Only initialize socket if it doesn't exist
     if (!socket) {
-      // In development, the backend is likely at :3000
-      // Since we use /api proxy in vite, we can try to connect to the base origin
+      // Connecting to the clinical namespace via the proxied /socket.io path
       socket = io('/clinical', {
         path: '/socket.io',
-        transports: ['websocket'],
+        transports: ['websocket', 'polling'], // Allow polling fallback for better compatibility
+        reconnection: true,
+        reconnectionAttempts: 5,
       });
 
       socket.on('connect', () => {
-        console.log('Connected to Clinical WebSocket');
+        console.log('CONNECTED: Clinical WebSocket active on ID:', socket?.id);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('SOCKET ERROR: Failed to connect to Clinical Gateway:', error.message);
       });
 
       socket.on('queue_updated', () => {
