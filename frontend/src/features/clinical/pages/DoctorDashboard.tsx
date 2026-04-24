@@ -1,180 +1,296 @@
+import React, { useMemo } from "react";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import {
   Activity,
   Clock,
-  UserPlus,
-  Calendar,
-  Check,
-  AlertTriangle,
+  CheckCircle2,
+  Stethoscope,
+  ClipboardList,
+  RefreshCw,
+  Search,
+  Zap,
+  ArrowRight,
+  Thermometer,
+  User,
+  Loader2,
 } from "lucide-react";
+import { useVisits } from "../hooks/useVisits";
+import { useClinicalSocket } from "../hooks/useClinicalSocket";
+import { useNavigate } from "react-router";
+import api from "@/lib/axios";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+
+const calculateAge = (dob: string | undefined) => {
+  if (!dob) return "??";
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 const Doctor_Dashboard = () => {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  useClinicalSocket();
 
-  // Mock data - in reality would come from API
-  const activeEncounters = [
-    {
-      id: "PX-2042",
-      name: "Jonathan Harker",
-      time: "10:30 AM",
-      status: "In Progress",
-      wait: "12m",
-    },
-    {
-      id: "PX-2043",
-      name: "Mina Murray",
-      time: "11:15 AM",
-      status: "Ready",
-      wait: "05m",
-    },
-  ];
+  const { data: visitsData, isLoading, isFetching } = useVisits();
+  const activeVisits = Array.isArray(visitsData) ? visitsData : [];
 
-  const pendingTasks = {
-    unsignedNotes: 4,
-    labResults: 2,
-    prescriptionRefills: 1,
-  };
+  // Logic: Patients ready for review or currently in-progress with this doctor
+  const doctorQueue = useMemo(() => {
+    return activeVisits
+      .filter(
+        (v) =>
+          v.status === "IN_PROGRESS" ||
+          (v.status === "CREATED" &&
+            v.queueEntry?.status === "READY_FOR_DOCTOR"),
+      )
+      .sort((a, b) => {
+        // Prioritize active encounters, then by time
+        if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
+        if (a.status !== "IN_PROGRESS" && b.status === "IN_PROGRESS") return 1;
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+  }, [activeVisits]);
 
-  const todayStats = {
-    visitsCompleted: 8,
-    avgPatientTime: "22m",
-    patientSatisfaction: "94%",
+  const handleStartEncounter = async (visitId: string) => {
+    try {
+      await api.patch(`/visits/${visitId}`, { status: "IN_PROGRESS" });
+      queryClient.invalidateQueries({ queryKey: ["visits"] });
+      navigate(`/doctor/encounter/${visitId}`);
+    } catch (err: any) {
+      toast.error("Failed to initialize encounter");
+      navigate(`/doctor/encounter/${visitId}`); // Navigate anyway to let workstation handle state
+    }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      {/* 1. Header & Quick Stats */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="mono-label text-clinical-blue mb-1 uppercase">
-            Clinical Cockpit
-          </p>
-          <h1 className="text-3xl font-bold text-white tracking-tighter">
-            Dr. {user?.firstName} {user?.lastName?.substring(0, 1)}.
+          <div className="flex items-center gap-3">
+            <p className="mono-label text-clinical-blue uppercase tracking-widest">
+              Clinical Cockpit
+            </p>
+            {isFetching && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-clinical-blue/10 border border-clinical-blue/20 rounded-full">
+                <RefreshCw
+                  size={10}
+                  className="text-clinical-blue animate-spin"
+                />
+                <span className="text-[8px] font-bold text-clinical-blue uppercase tracking-tighter">
+                  Live Syncing
+                </span>
+              </div>
+            )}
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase">
+            Dr. {user?.firstName} {user?.lastName}
           </h1>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-surface-container-low px-4 py-2 text-xs font-bold text-on-surface-variant hover:text-white border border-white/5 transition-colors">
-            HISTORY
-          </button>
-          <button className="bg-clinical-blue px-6 py-2 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-colors flex items-center gap-2">
-            <UserPlus size={14} />
-            NEXT PATIENT
-          </button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 space-y-4">
-          <h2 className="text-sm font-bold text-on-surface-variant flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            MY ACTIVE ENCOUNTERS
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeEncounters.map((p, i) => (
-              <div
-                key={i}
-                className="bg-surface-container-low p-5 hover:bg-surface-bright/10 transition-all cursor-pointer group border border-white/5"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="data-value text-clinical-blue text-[10px] mb-1">
-                      {p.id}
-                    </p>
-                    <h3 className="text-lg font-bold text-white">{p.name}</h3>
-                  </div>
-                  <span
-                    className={`text-[9px] font-bold px-2 py-0.5 border ${i === 0 ? "border-clinical-blue text-clinical-blue bg-clinical-blue/10" : "border-green-500 text-green-400 bg-green-500/10"}`}
-                  >
-                    {p.status.toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-6 border-t border-white/5 pt-4 mt-2">
-                  <div className="flex items-center gap-2 text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">
-                    <Clock size={12} className="text-clinical-blue" />
-                    <span>{p.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">
-                    <Activity size={12} className="text-clinical-blue" />
-                    <span>WAIT: {p.wait}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-surface-container-low p-6 border-l-2 border-clinical-blue shadow-lg shadow-black/20">
-            <h2 className="text-sm font-bold text-on-surface-variant mb-6 flex items-center gap-2 uppercase tracking-widest">
-              <AlertTriangle size={16} className="text-yellow-400" />
-              PENDING TASKS
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-yellow-500/30 transition-colors cursor-pointer group">
-                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">
-                  Unsigned Notes
-                </span>
-                <span className="data-value text-yellow-400 font-bold">
-                  {pendingTasks.unsignedNotes}
+        <div className="flex gap-6">
+          <div className="text-right">
+            <p className="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest mb-1">
+              Queue Status
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                <span className="text-xs font-bold text-white data-value">
+                  {doctorQueue.filter((v) => v.status === "CREATED").length}{" "}
+                  WAITING
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group">
-                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">
-                  Lab Results
-                </span>
-                <span className="data-value text-blue-400 font-bold">
-                  {pendingTasks.labResults}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-green-500/30 transition-colors cursor-pointer group">
-                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">
-                  Prescription Refills
-                </span>
-                <span className="data-value text-green-400 font-bold">
-                  {pendingTasks.prescriptionRefills}
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-clinical-blue shadow-[0_0_8px_#00b7ff]" />
+                <span className="text-xs font-bold text-white data-value">
+                  {doctorQueue.filter((v) => v.status === "IN_PROGRESS").length}{" "}
+                  ACTIVE
                 </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-surface-container-low p-6">
-          <h2 className="text-sm font-bold text-on-surface-variant mb-6 flex items-center gap-2 uppercase tracking-widest">
-            <Calendar size={16} className="text-clinical-blue" />
-            TODAY'S SUMMARY
+      {/* 2. Main Action Area: The Cleared List */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+          <h2 className="text-sm font-bold text-on-surface-variant flex items-center gap-2 uppercase tracking-[0.2em]">
+            <ClipboardList size={16} className="text-clinical-blue" />
+            Patients Cleared for Review
           </h2>
-          <div className="space-y-3">
-            {[
-              {
-                label: "Visits Completed",
-                value: todayStats.visitsCompleted,
-                icon: Check,
-                color: "text-green-400",
-              },
-              {
-                label: "Avg Time/Patient",
-                value: todayStats.avgPatientTime,
-                icon: Clock,
-                color: "text-clinical-blue",
-              },
-              {
-                label: "Patient Satisfaction",
-                value: todayStats.patientSatisfaction,
-                icon: Check,
-                color: "text-green-400",
-              },
-            ].map((stat) => (
-              <div className="flex items-center justify-between p-2 bg-background/50 border border-white/5 rounded-sm">
-                <span className="text-xs text-on-surface-variant">
-                  {stat.label}
-                </span>
-                <span className={`data-value font-bold ${stat.color}`}>
-                  {stat.value}
-                </span>
-                <stat.icon size={12} className={`${stat.color} ml-2`} />
-              </div>
-            ))}
+          <div className="flex items-center gap-3 bg-surface-container-low px-4 py-2 border border-white/5 focus-within:border-clinical-blue transition-all">
+            <Search size={14} className="text-on-surface-variant" />
+            <input
+              type="text"
+              placeholder="FILTER QUEUE..."
+              className="bg-transparent border-none outline-none text-[10px] font-bold text-white placeholder:text-on-surface-variant/50 w-48"
+            />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          {isLoading ? (
+            <div className="p-20 text-center border border-dashed border-white/5 bg-surface-container-low/20">
+              <Loader2
+                size={32}
+                className="text-clinical-blue animate-spin mx-auto mb-4"
+              />
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
+                Synchronizing Clinical Records...
+              </p>
+            </div>
+          ) : doctorQueue.length > 0 ? (
+            doctorQueue.map((visit) => {
+              const latestVital = visit.vitals?.[0];
+              const isActive = visit.status === "IN_PROGRESS";
+
+              return (
+                <div
+                  key={visit.id}
+                  className={`bg-surface-container-low border border-white/5 flex items-stretch group hover:border-clinical-blue/30 transition-all ${isActive ? "bg-clinical-blue/[0.03] border-l-4 border-l-clinical-blue" : "border-l-4 border-l-yellow-400/50"}`}
+                >
+                  {/* Identity Section */}
+                  <div className="p-6 border-r border-white/5 flex gap-6 items-center min-w-[300px]">
+                    <div
+                      className={`w-12 h-12 flex items-center justify-center font-bold text-lg border ${isActive ? "bg-clinical-blue text-white border-clinical-blue shadow-lg shadow-clinical-blue/20" : "bg-background text-on-surface-variant border-white/5"}`}
+                    >
+                      {visit.patient?.firstName?.[0]}
+                      {visit.patient?.lastName?.[0]}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white uppercase leading-none mb-2 group-hover:text-clinical-blue transition-colors">
+                        {visit.patient?.firstName} {visit.patient?.lastName}
+                      </h3>
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">
+                        <span>
+                          PX-{visit.patient?.id?.slice(-6).toUpperCase()}
+                        </span>
+                        <span>•</span>
+                        <span>{visit.patient?.sex}</span>
+                        <span>•</span>
+                        <span>
+                          {calculateAge(visit.patient?.dateOfBirth)} YRS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Triage Stats Section */}
+                  <div className="flex-1 p-6 flex items-center gap-12 bg-background/20">
+                    {latestVital ? (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-tighter opacity-60">
+                            Blood Pressure
+                          </p>
+                          <p className="text-sm font-bold text-white data-value">
+                            {latestVital.systolicBP}/{latestVital.diastolicBP}{" "}
+                            <span className="text-[8px] text-on-surface-variant font-normal">
+                              mmHg
+                            </span>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-tighter opacity-60">
+                            Heart Rate
+                          </p>
+                          <p className="text-sm font-bold text-white data-value">
+                            {latestVital.heartRate}{" "}
+                            <span className="text-[8px] text-on-surface-variant font-normal">
+                              BPM
+                            </span>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-tighter opacity-60">
+                            Temp
+                          </p>
+                          <p className="text-sm font-bold text-white data-value">
+                            {latestVital.temperatureCelsius}°{" "}
+                            <span className="text-[8px] text-on-surface-variant font-normal">
+                              C
+                            </span>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-tighter opacity-60">
+                            Wait Time
+                          </p>
+                          <p className="text-sm font-bold text-yellow-400 data-value flex items-center gap-1">
+                            <Clock size={10} />
+                            12m
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 opacity-30">
+                        <Zap size={14} className="text-on-surface-variant" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          Triage data syncing...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CTA Section */}
+                  <div className="p-6 flex items-center bg-background/40">
+                    <button
+                      onClick={() =>
+                        isActive
+                          ? navigate(`/doctor/encounter/${visit.id}`)
+                          : handleStartEncounter(visit.id)
+                      }
+                      className={`flex items-center gap-3 px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                        isActive
+                          ? "bg-green-500 text-white hover:bg-green-400 shadow-lg shadow-green-500/10"
+                          : "bg-clinical-blue text-white hover:bg-clinical-blue/90 shadow-lg shadow-clinical-blue/10"
+                      }`}
+                    >
+                      {isActive ? (
+                        <>
+                          <Stethoscope size={16} />
+                          CONTINUE REVIEW
+                        </>
+                      ) : (
+                        <>
+                          <ArrowRight size={16} />
+                          OPEN ENCOUNTER
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-20 text-center border border-dashed border-white/5 bg-surface-container-low/10 rounded-sm">
+              <div className="w-16 h-16 rounded-full bg-clinical-blue/5 border border-clinical-blue/10 flex items-center justify-center mx-auto mb-6">
+                <Stethoscope
+                  size={28}
+                  className="text-clinical-blue opacity-20"
+                />
+              </div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-[0.3em] mb-2">
+                No Patients Cleared
+              </h3>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest max-w-[300px] mx-auto leading-relaxed">
+                The clinical queue is empty. New patients will appear here once
+                triage is completed by the nursing unit.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

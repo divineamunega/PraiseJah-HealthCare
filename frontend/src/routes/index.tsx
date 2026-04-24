@@ -12,6 +12,7 @@ import SystemSettings from '@/features/admin/pages/SystemSettings';
 import DatabaseManagement from '@/features/admin/pages/DatabaseManagement';
 import RolePermissions from '@/features/admin/pages/RolePermissions';
 import DoctorDashboard from '@/features/clinical/pages/DoctorDashboard';
+import EncounterWorkstation from '@/features/clinical/pages/EncounterWorkstation';
 import NurseDashboard from '@/features/clinical/pages/NurseDashboard';
 import SecretaryDashboard from '@/features/clinical/pages/SecretaryDashboard';
 import PatientListPage from '@/features/clinical/pages/PatientListPage';
@@ -36,28 +37,28 @@ const AppRoutes = () => {
 
       <Route path="/" element={<AuthGuard><DashboardLayout /></AuthGuard>}>
         <Route index element={<DefaultRedirect />} />
-...
+
         {/* Admin Routes */}
         <Route path="admin" element={<RoleGuard path="/admin"><AdminOverview /></RoleGuard>} />
         <Route path="admin/staff" element={<RoleGuard path="/admin"><StaffManagement /></RoleGuard>} />
         <Route path="admin/audit" element={<RoleGuard path="/admin"><AuditVault /></RoleGuard>} />
         <Route path="admin/patients" element={<RoleGuard path="/admin"><PatientManagement /></RoleGuard>} />
-        
-        {/* SUPER_ADMIN Only Routes */}
         <Route path="admin/settings" element={<RoleGuard path="/admin/settings"><SystemSettings /></RoleGuard>} />
         <Route path="admin/database" element={<RoleGuard path="/admin/database"><DatabaseManagement /></RoleGuard>} />
         <Route path="admin/permissions" element={<RoleGuard path="/admin/permissions"><RolePermissions /></RoleGuard>} />
 
         {/* Doctor Routes */}
         <Route path="doctor" element={<RoleGuard path="/doctor"><DoctorDashboard /></RoleGuard>} />
+        <Route path="doctor/encounter/:visitId" element={<RoleGuard path="/doctor"><EncounterWorkstation /></RoleGuard>} />
+        <Route path="doctor/patients" element={<RoleGuard path="/doctor/patients"><PatientListPage /></RoleGuard>} />
 
         {/* Nurse Routes */}
         <Route path="nurse" element={<RoleGuard path="/nurse"><NurseDashboard /></RoleGuard>} />
-        <Route path="nurse/patients" element={<RoleGuard path="/nurse"><PatientListPage /></RoleGuard>} />
+        <Route path="nurse/patients" element={<RoleGuard path="/nurse/patients"><PatientListPage /></RoleGuard>} />
 
         {/* Secretary Routes */}
         <Route path="secretary" element={<RoleGuard path="/secretary"><SecretaryDashboard /></RoleGuard>} />
-        <Route path="secretary/patients" element={<RoleGuard path="/secretary"><PatientListPage /></RoleGuard>} />
+        <Route path="secretary/patients" element={<RoleGuard path="/secretary/patients"><PatientListPage /></RoleGuard>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

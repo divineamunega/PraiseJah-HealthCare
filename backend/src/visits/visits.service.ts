@@ -27,7 +27,6 @@ export class VisitsService {
     }
 
     // 2. Prevent multiple active visits for the same patient
-    // Active = CREATED or IN_PROGRESS
     const activeVisit = await this.prisma.visit.findFirst({
       where: {
         patientId: dto.patientId,
@@ -38,7 +37,7 @@ export class VisitsService {
 
     if (activeVisit) {
       throw new ConflictException(
-        `Patient already has an active visit (ID: ${activeVisit.id}). Please complete the current visit before checking in again.`,
+        'This patient already has an active visit. Please complete the current visit before checking in again.',
       );
     }
 
@@ -81,12 +80,16 @@ export class VisitsService {
       where: { deletedAt: null },
       include: {
         patient: {
-          select: { firstName: true, lastName: true, sex: true }
+          select: { id: true, firstName: true, lastName: true, sex: true, dateOfBirth: true }
         },
         doctor: {
           select: { firstName: true, lastName: true }
         },
         queueEntry: true,
+        vitals: {
+          orderBy: { recordedAt: 'desc' },
+          take: 1
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -96,10 +99,14 @@ export class VisitsService {
     const visit = await this.prisma.visit.findFirst({
       where: { id, deletedAt: null },
       include: {
-        patient: true,
+        patient: {
+          select: { id: true, firstName: true, lastName: true, sex: true, dateOfBirth: true }
+        },
         doctor: { select: { id: true, firstName: true, lastName: true } },
         queueEntry: true,
-        vitals: true,
+        vitals: {
+          orderBy: { recordedAt: 'desc' }
+        },
       },
     });
 
