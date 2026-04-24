@@ -18,8 +18,8 @@ export class PatientsService {
     lastName: true,
     dateOfBirth: true,
     sex: true,
-    phone: true,
-    address: true,
+    // phone is redacted
+    // address is redacted
     createdAt: true,
     updatedAt: true,
   };
