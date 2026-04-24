@@ -77,6 +77,23 @@ export class VitalsService {
     });
   }
 
+  async findRecent() {
+    return this.prisma.vital.findMany({
+      where: { deletedAt: null },
+      take: 10,
+      orderBy: { recordedAt: 'desc' },
+      include: {
+        visit: {
+          include: {
+            patient: {
+              select: { firstName: true, lastName: true, sex: true }
+            }
+          }
+        },
+      }
+    });
+  }
+
   async findOne(id: string) {
     const vital = await this.prisma.vital.findFirst({
       where: { id, deletedAt: null },

@@ -34,6 +34,12 @@ export class VitalsController {
     return this.vitalsService.create(dto, user);
   }
 
+  @Get('recent')
+  @ApiOperation({ summary: 'Get recently recorded vitals across all patients' })
+  findRecent() {
+    return this.vitalsService.findRecent();
+  }
+
   @Get('visit/:visitId')
   @ApiOperation({ summary: 'Get all vital recordings for a specific visit' })
   findByVisit(@Param('visitId') visitId: string) {
