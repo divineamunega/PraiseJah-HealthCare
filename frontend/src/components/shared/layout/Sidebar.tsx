@@ -6,14 +6,8 @@ import {
   ShieldCheck,
   UserCheck,
   Database,
-  FileText,
-  Calendar,
-  Activity,
-  Thermometer,
   ClipboardList,
-  UserPlus,
-  HardDrive,
-  Lock,
+  Activity,
 } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useAuth';
@@ -30,31 +24,22 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   // Admin Routes
-  { id: 'admin_overview', path: '/admin', icon: LayoutDashboard, label: 'Dashboard', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'staff', path: '/admin/staff', icon: UserCheck, label: 'Staff Management', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'patients', path: '/admin/patients', icon: Database, label: 'Patient Registry', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'audit', path: '/admin/audit', icon: ShieldCheck, label: 'Security Audit', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  
-  // SUPER_ADMIN Only Routes
-  { id: 'settings', path: '/admin/settings', icon: Settings, label: 'System Settings', roles: ['SUPER_ADMIN'] },
-  { id: 'database', path: '/admin/database', icon: HardDrive, label: 'Database Management', roles: ['SUPER_ADMIN'] },
-  { id: 'permissions', path: '/admin/permissions', icon: Lock, label: 'Role Permissions', roles: ['SUPER_ADMIN'] },
+  { id: 'admin_overview', path: '/admin', icon: LayoutDashboard, label: 'System Overview', roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { id: 'staff', path: '/admin/staff', icon: UserCheck, label: 'Staff Directory', roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { id: 'audit', path: '/admin/audit', icon: ShieldCheck, label: 'Security Vault', roles: ['SUPER_ADMIN', 'ADMIN'] },
 
   // Doctor Routes
   { id: 'doctor_dash', path: '/doctor', icon: LayoutDashboard, label: 'Clinical Cockpit', roles: ['DOCTOR'] },
-  { id: 'doctor_patients', path: '/doctor/patients', icon: Users, label: 'My Patients', roles: ['DOCTOR'] },
-  { id: 'doctor_notes', path: '/doctor/notes', icon: FileText, label: 'Clinical Notes', roles: ['DOCTOR'] },
-  { id: 'doctor_prescriptions', path: '/doctor/prescriptions', icon: Activity, label: 'Prescriptions', roles: ['DOCTOR'] },
+  { id: 'doctor_patients', path: '/doctor/patients', icon: Users, label: 'Patient Registry', roles: ['DOCTOR'] },
 
   // Nurse Routes
-  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Triage Station', roles: ['NURSE'] },
-  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Queue Management', roles: ['NURSE'] },
-  { id: 'nurse_vitals', path: '/nurse/vitals', icon: Thermometer, label: 'Vitals Recording', roles: ['NURSE'] },
+  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Nursing Station', roles: ['NURSE'] },
+  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Clinical Queue', roles: ['NURSE'] },
   { id: 'nurse_patients', path: '/nurse/patients', icon: Users, label: 'Patient List', roles: ['NURSE'] },
 
   // Secretary Routes
   { id: 'secretary_dash', path: '/secretary', icon: LayoutDashboard, label: 'Front Desk', roles: ['SECRETARY'] },
-  { id: 'secretary_patients', path: '/secretary/patients', icon: Users, label: 'Patient List', roles: ['SECRETARY'] },
+  { id: 'secretary_patients', path: '/secretary/patients', icon: Users, label: 'Patient Registry', roles: ['SECRETARY'] },
 ];
 
 const Sidebar = () => {
@@ -110,10 +95,6 @@ const Sidebar = () => {
       </nav>
 
       <div className="p-4 px-8 border-t border-surface-bright/10 space-y-4">
-        <button className="flex items-center gap-3 text-on-surface-variant hover:text-white text-sm transition-colors w-full group">
-          <Settings size={18} className="group-hover:rotate-45 transition-transform" />
-          <span>Settings</span>
-        </button>
         <button
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
