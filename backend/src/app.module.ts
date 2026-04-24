@@ -14,6 +14,7 @@ import { AuditModule } from './audit/audit.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { PatientsModule } from './patients/patients.module.js';
 import { VisitsModule } from './visits/visits.module.js';
+import { VitalsModule } from './vitals/vitals.module.js';
 
 configDotenv();
 
@@ -34,6 +35,7 @@ configDotenv();
     AuditModule,
     PatientsModule,
     VisitsModule,
+    VitalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
