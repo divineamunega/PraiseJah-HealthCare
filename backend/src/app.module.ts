@@ -15,6 +15,9 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import { PatientsModule } from './patients/patients.module.js';
 import { VisitsModule } from './visits/visits.module.js';
 import { VitalsModule } from './vitals/vitals.module.js';
+import { ClinicalNotesModule } from './clinical-notes/clinical-notes.module.js';
+import { LabOrdersModule } from './lab-orders/lab-orders.module.js';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module.js';
 
 configDotenv();
 
@@ -36,6 +39,9 @@ configDotenv();
     PatientsModule,
     VisitsModule,
     VitalsModule,
+    ClinicalNotesModule,
+    LabOrdersModule,
+    PrescriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

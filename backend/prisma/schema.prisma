@@ -31,6 +31,8 @@ enum ActiveStatus {
 enum QueueStatus {
   WAITING_FOR_VITALS
   READY_FOR_DOCTOR
+  WAITING_FOR_LAB
+  WAITING_FOR_PHARMACY
   ASSIGNED
   IN_PROGRESS
   DONE
@@ -120,6 +122,7 @@ model User {
   auditLogsAsActor AuditLog[]   @relation("ActorAuditLogs")
   visits           Visit[]      @relation("VisitDoctor")
   queueEntries     QueueEntry[]
+  clinicalNotes    ClinicalNote[]
 
   // === Auditing fields (very important for admins) ===
   createdById    String? // Who created this user (admin)
@@ -261,13 +264,15 @@ model Vital {
 // ============================================================
 
 model ClinicalNote {
-  id        String    @id @default(uuid())
-  visitId   String
-  authorId  String? // Doctor
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // Soft delete
+  id             String    @id @default(uuid())
+  visitId        String    @unique
+  authorId       String? // Doctor
+  author         User?     @relation(fields: [authorId], references: [id])
+  chiefComplaint String?
+  content        String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime? // Soft delete
 
   // Relations
   visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
