@@ -1,8 +1,9 @@
 import api from '@/lib/axios';
-import { type Patient } from './patients.api';
+import type { Patient } from './patients.api';
+import type { Vital } from './vitals.api';
 
 export type VisitStatus = 'CREATED' | 'IN_PROGRESS' | 'COMPLETED';
-export type QueueStatus = 'WAITING_FOR_VITALS' | 'READY_FOR_DOCTOR' | 'ASSIGNED' | 'IN_PROGRESS' | 'DONE';
+export type QueueStatus = 'WAITING_FOR_VITALS' | 'READY_FOR_DOCTOR' | 'WAITING_FOR_LAB' | 'WAITING_FOR_PHARMACY' | 'ASSIGNED' | 'IN_PROGRESS' | 'DONE';
 
 export interface QueueEntry {
   id: string;
@@ -24,6 +25,7 @@ export interface Visit {
   patient?: Partial<Patient>;
   doctor?: { id: string; firstName: string; lastName: string };
   queueEntry?: QueueEntry;
+  vitals?: Vital[]; // Added vitals to match backend include
 }
 
 export const visitsApi = {
