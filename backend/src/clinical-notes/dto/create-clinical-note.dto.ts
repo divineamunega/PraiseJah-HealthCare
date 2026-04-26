@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsUUID, IsInt, Min } from 'class-validator';
 
 export class CreateClinicalNoteDto {
   @ApiProperty({ example: 'uuid-of-visit' })
@@ -16,4 +16,10 @@ export class CreateClinicalNoteDto {
   @IsNotEmpty()
   @IsString()
   readonly content!: string;
+
+  @ApiPropertyOptional({ example: 0, description: 'Version for optimistic concurrency control' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  readonly version?: bigint;
 }
