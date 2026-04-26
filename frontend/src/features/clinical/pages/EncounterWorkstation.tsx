@@ -15,9 +15,12 @@ import {
   FileText,
   CloudSync,
   AlertTriangle,
+  Plus,
+  Beaker,
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
+import { useLabs, useCreateLabOrder } from "../hooks/useLabs";
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
 import { useAutosaveSOAP, type SoapData } from "../hooks/useAutosaveSOAP";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,7 +60,11 @@ const EncounterWorkstation = () => {
   
   const completeVisit = useCompleteVisit();
   
-  const [activeTab, setActiveTab] = useState<'DOCUMENTATION' | 'DIAGNOSTICS' | 'PHARMACY'>('DOCUMENTATION');
+  const [activeTab, setActiveTab] = useState<'DOCUMENTATION' | 'LAB_ORDERS' | 'PHARMACY'>('DOCUMENTATION');
+  const [testName, setTestName] = useState("");
+
+  const { data: labs, isLoading: isLoadingLabs } = useLabs(visitId!);
+  const createLabOrder = useCreateLabOrder();
   
   // SOAP Note State
   const [chiefComplaint, setChiefComplaint] = useState("");
@@ -145,6 +152,15 @@ const EncounterWorkstation = () => {
   };
 
   const syncDisplay = getSyncDisplay();
+
+  const handleRequestLab = async () => {
+    if (!testName.trim() || !visitId) return;
+    await createLabOrder.mutateAsync({
+      visitId,
+      testName: testName.trim(),
+    });
+    setTestName("");
+  };
 
   const handleFinish = async () => {
     if (!visitId) return;
@@ -282,7 +298,7 @@ const EncounterWorkstation = () => {
            <nav className="h-14 bg-surface-container-low/50 border-b border-white/5 flex items-center px-10 gap-12 shrink-0">
               {[
                 { id: 'DOCUMENTATION', label: 'Clinical Documentation', icon: FileText },
-                { id: 'DIAGNOSTICS', label: 'Investigation Orders', icon: Microscope },
+                { id: 'LAB_ORDERS', label: 'Laboratory Requests', icon: Microscope },
                 { id: 'PHARMACY', label: 'E-Prescription', icon: Pill },
               ].map(tab => (
                  <button 
@@ -348,7 +364,85 @@ const EncounterWorkstation = () => {
                   </motion.div>
                 )}
 
-                {activeTab !== 'DOCUMENTATION' && (
+                {activeTab === 'LAB_ORDERS' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="p-10 max-w-5xl mx-auto space-y-10"
+                  >
+                    <section className="space-y-6">
+                       <div className="flex flex-col gap-1">
+                          <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.4em] flex items-center gap-3">
+                             <Beaker size={14} className="text-clinical-blue" />
+                             New Lab Order
+                          </h4>
+                          <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">Request diagnostic investigations for this patient</p>
+                       </div>
+                       
+                       <div className="flex gap-4">
+                          <input 
+                            type="text"
+                            placeholder="Enter test name (e.g. Full Blood Count, Malaria Parasite...)"
+                            className="flex-1 bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                            value={testName}
+                            onChange={e => setTestName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleRequestLab()}
+                          />
+                          <button 
+                            onClick={handleRequestLab}
+                            disabled={createLabOrder.isPending || !testName.trim()}
+                            className="bg-clinical-blue px-6 py-4 text-[10px] font-bold text-background hover:bg-clinical-blue/90 transition-all flex items-center gap-3 shadow-lg shadow-clinical-blue/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {createLabOrder.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={16} />}
+                            Request Lab Order
+                          </button>
+                       </div>
+                    </section>
+
+                    <section className="space-y-6">
+                       <div className="flex flex-col gap-1">
+                          <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.3em]">Pending & Recent Orders</h4>
+                          <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">Orders placed during this clinical session</p>
+                       </div>
+
+                       <div className="space-y-3">
+                          {isLoadingLabs ? (
+                            <div className="p-12 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-30 gap-4">
+                               <Loader2 size={24} className="animate-spin" />
+                               <p className="text-[10px] font-bold uppercase tracking-widest">Fetching Orders...</p>
+                            </div>
+                          ) : labs && labs.length > 0 ? (
+                            labs.map((order) => (
+                              <div key={order.id} className="bg-surface-container-low border border-white/5 p-4 flex justify-between items-center group hover:border-clinical-blue/20 transition-all">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 bg-background border border-white/5 flex items-center justify-center">
+                                       <Microscope size={14} className="text-clinical-blue/50" />
+                                    </div>
+                                    <div>
+                                       <p className="text-sm font-bold text-white uppercase tracking-tight">{order.testName}</p>
+                                       <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+                                          Ordered {new Date(order.createdAt).toLocaleTimeString()}
+                                       </p>
+                                    </div>
+                                 </div>
+                                 <div className="flex items-center gap-3">
+                                    <span className="text-[8px] font-bold bg-yellow-400/10 text-yellow-400 px-2 py-1 border border-yellow-400/20 uppercase tracking-widest">Pending Result</span>
+                                 </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-12 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-30 gap-4">
+                               <Microscope size={32} className="text-on-surface-variant" />
+                               <p className="text-[10px] font-bold uppercase tracking-widest">No lab orders requested yet</p>
+                            </div>
+                          )}
+                       </div>
+                    </section>
+                  </motion.div>
+                )}
+
+                {activeTab === 'PHARMACY' && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
