@@ -1,10 +1,21 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateVisitDto } from './dto/create-visit.dto.js';
 import { UpdateVisitDto } from './dto/update-visit.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
 import { AuditService } from '../audit/audit.service.js';
-import { AuditAction, AuditTargetType, QueueStatus, VisitStatus, User } from '@prisma/client';
+import {
+  AuditAction,
+  AuditTargetType,
+  QueueStatus,
+  VisitStatus,
+  User,
+} from '@prisma/client';
 import { VisitsGateway } from './visits.gateway.js';
 
 @Injectable()
@@ -64,13 +75,15 @@ export class VisitsService {
     // Broadcast queue update to clinical staff
     this.visitsGateway.broadcastQueueUpdate();
 
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.VISIT_CREATED,
-      targetType: AuditTargetType.VISIT,
-      targetId: visit.id,
-      metadata: { patientId: dto.patientId },
-    }).catch(err => this.logger.error(`Audit failed: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.VISIT_CREATED,
+        targetType: AuditTargetType.VISIT,
+        targetId: visit.id,
+        metadata: { patientId: dto.patientId },
+      })
+      .catch((err) => this.logger.error(`Audit failed: ${err.message}`));
 
     return visit;
   }
@@ -80,15 +93,21 @@ export class VisitsService {
       where: { deletedAt: null },
       include: {
         patient: {
-          select: { id: true, firstName: true, lastName: true, sex: true, dateOfBirth: true }
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            sex: true,
+            dateOfBirth: true,
+          },
         },
         doctor: {
-          select: { firstName: true, lastName: true }
+          select: { firstName: true, lastName: true },
         },
         queueEntry: true,
         vitals: {
           orderBy: { recordedAt: 'desc' },
-          take: 1
+          take: 1,
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -100,12 +119,18 @@ export class VisitsService {
       where: { id, deletedAt: null },
       include: {
         patient: {
-          select: { id: true, firstName: true, lastName: true, sex: true, dateOfBirth: true }
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            sex: true,
+            dateOfBirth: true,
+          },
         },
         doctor: { select: { id: true, firstName: true, lastName: true } },
         queueEntry: true,
         vitals: {
-          orderBy: { recordedAt: 'desc' }
+          orderBy: { recordedAt: 'desc' },
         },
       },
     });
@@ -133,13 +158,15 @@ export class VisitsService {
     this.visitsGateway.broadcastVisitUpdate(id);
     this.visitsGateway.broadcastQueueUpdate();
 
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.VISIT_UPDATED,
-      targetType: AuditTargetType.VISIT,
-      targetId: id,
-      metadata: { old: existing.status, new: updated.status },
-    }).catch(err => this.logger.error(`Audit failed: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.VISIT_UPDATED,
+        targetType: AuditTargetType.VISIT,
+        targetId: id,
+        metadata: { old: existing.status, new: updated.status },
+      })
+      .catch((err) => this.logger.error(`Audit failed: ${err.message}`));
 
     return updated;
   }
@@ -159,12 +186,14 @@ export class VisitsService {
     this.visitsGateway.broadcastQueueUpdate();
     this.visitsGateway.broadcastVisitUpdate(id);
 
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.VISIT_COMPLETED,
-      targetType: AuditTargetType.VISIT,
-      targetId: id,
-    }).catch(err => this.logger.error(`Audit failed: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.VISIT_COMPLETED,
+        targetType: AuditTargetType.VISIT,
+        targetId: id,
+      })
+      .catch((err) => this.logger.error(`Audit failed: ${err.message}`));
 
     return visit;
   }
@@ -175,10 +204,10 @@ export class VisitsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
-    
+
     // Broadcast removal
     this.visitsGateway.broadcastQueueUpdate();
-    
+
     return result;
   }
 }

@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   loginUser,
   logoutUser,
@@ -14,12 +10,12 @@ import {
   type ForgotPasswordRequest,
   type ResetPasswordRequest,
   type ChangePasswordRequest,
-} from '../api/auth.api';
-import { useAuthStore } from '../stores/auth.store';
-import { setAccessToken } from '../utils/token.util';
+} from "../api/auth.api";
+import { useAuthStore } from "../stores/auth.store";
+import { setAccessToken } from "../utils/token.util";
 
 const AUTH_KEYS = {
-  me: ['auth', 'me'] as const,
+  me: ["auth", "me"] as const,
 };
 
 export function useLogin() {

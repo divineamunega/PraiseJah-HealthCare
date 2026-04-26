@@ -4,7 +4,7 @@ import { AuditTargetType, AuditAction, Prisma } from '@prisma/client';
 
 @Injectable()
 export class AuditService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async createLog(data: {
     actorId?: string;

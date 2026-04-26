@@ -24,7 +24,7 @@ import { AuditInterceptor } from '../audit/interceptors/audit.interceptor.js';
 @UseInterceptors(AuditInterceptor)
 @Controller('vitals')
 export class VitalsController {
-  constructor(private readonly vitalsService: VitalsService) { }
+  constructor(private readonly vitalsService: VitalsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)

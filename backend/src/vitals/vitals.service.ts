@@ -1,10 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateVitalDto } from './dto/create-vital.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { VisitsGateway } from '../visits/visits.gateway.js';
-import { AuditAction, AuditTargetType, QueueStatus, User } from '@prisma/client';
+import {
+  AuditAction,
+  AuditTargetType,
+  QueueStatus,
+  User,
+} from '@prisma/client';
 
 @Injectable()
 export class VitalsService {
@@ -45,9 +54,9 @@ export class VitalsService {
       // Advance the patient in the clinical queue
       await tx.queueEntry.update({
         where: { visitId: dto.visitId },
-        data: { 
+        data: {
           status: QueueStatus.READY_FOR_DOCTOR,
-          userId: actor.id // Track the nurse who performed triage
+          userId: actor.id, // Track the nurse who performed triage
         },
       });
 
@@ -59,13 +68,17 @@ export class VitalsService {
     this.visitsGateway.broadcastVisitUpdate(dto.visitId);
 
     // 4. Record clinical audit trail
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.VITALS_RECORDED,
-      targetType: AuditTargetType.VITAL,
-      targetId: vital.id,
-      metadata: { visitId: dto.visitId },
-    }).catch(err => this.logger.error(`Clinical audit failed: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.VITALS_RECORDED,
+        targetType: AuditTargetType.VITAL,
+        targetId: vital.id,
+        metadata: { visitId: dto.visitId },
+      })
+      .catch((err) =>
+        this.logger.error(`Clinical audit failed: ${err.message}`),
+      );
 
     return vital;
   }
@@ -86,11 +99,11 @@ export class VitalsService {
         visit: {
           include: {
             patient: {
-              select: { firstName: true, lastName: true, sex: true }
-            }
-          }
+              select: { firstName: true, lastName: true, sex: true },
+            },
+          },
         },
-      }
+      },
     });
   }
 

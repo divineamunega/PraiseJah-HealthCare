@@ -16,15 +16,11 @@ export class AuthMailService {
   ) {}
 
   async addPasswordResetEmailJob(data: PasswordResetEmailJob) {
-    await this.authEmailQueue.add(
-      'send-password-reset',
-      data,
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: true,
-        removeOnFail: 50,
-      },
-    );
+    await this.authEmailQueue.add('send-password-reset', data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: true,
+      removeOnFail: 50,
+    });
   }
 }

@@ -10,7 +10,7 @@ import { LoggerService } from '../../logger/logger.service.js';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: LoggerService) { }
+  constructor(private readonly logger: LoggerService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -27,9 +27,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const exceptionResponse: any = exception.getResponse();
-      message = typeof exceptionResponse === 'object'
-        ? exceptionResponse.message || exceptionResponse.error
-        : exceptionResponse;
+      message =
+        typeof exceptionResponse === 'object'
+          ? exceptionResponse.message || exceptionResponse.error
+          : exceptionResponse;
     } else if (exception instanceof Error) {
       message = exception.message;
       this.logger.error(

@@ -18,7 +18,12 @@ import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Role, type User } from '@prisma/client';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { AuditInterceptor } from '../audit/interceptors/audit.interceptor.js';
 
 @ApiTags('visits')
@@ -27,7 +32,7 @@ import { AuditInterceptor } from '../audit/interceptors/audit.interceptor.js';
 @UseInterceptors(AuditInterceptor)
 @Controller('visits')
 export class VisitsController {
-  constructor(private readonly visitsService: VisitsService) { }
+  constructor(private readonly visitsService: VisitsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)

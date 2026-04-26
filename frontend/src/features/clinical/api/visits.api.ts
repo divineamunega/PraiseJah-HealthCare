@@ -1,9 +1,16 @@
-import api from '@/lib/axios';
-import type { Patient } from './patients.api';
-import type { Vital } from './vitals.api';
+import api from "@/lib/axios";
+import type { Patient } from "./patients.api";
+import type { Vital } from "./vitals.api";
 
-export type VisitStatus = 'CREATED' | 'IN_PROGRESS' | 'COMPLETED';
-export type QueueStatus = 'WAITING_FOR_VITALS' | 'READY_FOR_DOCTOR' | 'WAITING_FOR_LAB' | 'WAITING_FOR_PHARMACY' | 'ASSIGNED' | 'IN_PROGRESS' | 'DONE';
+export type VisitStatus = "CREATED" | "IN_PROGRESS" | "COMPLETED";
+export type QueueStatus =
+  | "WAITING_FOR_VITALS"
+  | "READY_FOR_DOCTOR"
+  | "WAITING_FOR_LAB"
+  | "WAITING_FOR_PHARMACY"
+  | "ASSIGNED"
+  | "IN_PROGRESS"
+  | "DONE";
 
 export interface QueueEntry {
   id: string;
@@ -30,12 +37,12 @@ export interface Visit {
 
 export const visitsApi = {
   create: async (data: { patientId: string; doctorId?: string }) => {
-    const res = await api.post<Visit>('/visits', data);
+    const res = await api.post<Visit>("/visits", data);
     return res.data;
   },
 
   findAll: async () => {
-    const res = await api.get<Visit[]>('/visits');
+    const res = await api.get<Visit[]>("/visits");
     return res.data;
   },
 

@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 export interface LoginRequest {
   email: string;
@@ -35,24 +35,24 @@ export interface ChangePasswordRequest {
 }
 
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const res = await api.post<LoginResponse>('/auth/login', data);
+  const res = await api.post<LoginResponse>("/auth/login", data);
   return res.data;
 }
 
 export async function refreshTokens(): Promise<LoginResponse> {
-  const res = await api.post<LoginResponse>('/auth/refresh');
+  const res = await api.post<LoginResponse>("/auth/refresh");
   return res.data;
 }
 
 export async function logoutUser(): Promise<void> {
-  await api.post('/auth/logout');
+  await api.post("/auth/logout");
 }
 
 export async function forgotPassword(
   data: ForgotPasswordRequest,
 ): Promise<{ message: string }> {
   const res = await api.post<{ message: string }>(
-    '/auth/forgot-password',
+    "/auth/forgot-password",
     data,
   );
   return res.data;
@@ -61,7 +61,7 @@ export async function forgotPassword(
 export async function resetPassword(
   data: ResetPasswordRequest,
 ): Promise<{ message: string }> {
-  const res = await api.post<{ message: string }>('/auth/reset-password', data);
+  const res = await api.post<{ message: string }>("/auth/reset-password", data);
   return res.data;
 }
 
@@ -69,13 +69,13 @@ export async function changePassword(
   data: ChangePasswordRequest,
 ): Promise<{ message: string }> {
   const res = await api.post<{ message: string }>(
-    '/auth/change-password',
+    "/auth/change-password",
     data,
   );
   return res.data;
 }
 
 export async function getMe(): Promise<AuthUser> {
-  const res = await api.get<AuthUser>('/users/me');
+  const res = await api.get<AuthUser>("/users/me");
   return res.data;
 }

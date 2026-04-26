@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 export interface ClinicalNote {
   id: string;
@@ -24,7 +24,7 @@ export interface CreateNoteRequest {
 
 export const notesApi = {
   create: async (data: CreateNoteRequest) => {
-    const res = await api.post<ClinicalNote>('/clinical-notes', data);
+    const res = await api.post<ClinicalNote>("/clinical-notes", data);
     return res.data;
   },
 

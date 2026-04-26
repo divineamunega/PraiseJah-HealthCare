@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useForgotPassword } from '@/features/auth/hooks/useAuth';
-import { Shield, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { useForgotPassword } from "@/features/auth/hooks/useAuth";
+import { Shield, Mail, ArrowLeft, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router";
+import { toast } from "sonner";
 
 const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const forgotPassword = useForgotPassword();
 
@@ -15,9 +15,9 @@ const ForgotPasswordPage = () => {
     try {
       await forgotPassword.mutateAsync({ email });
       setSubmitted(true);
-      toast.success('Reset link sent');
+      toast.success("Reset link sent");
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send reset link');
+      toast.error(err.message || "Failed to send reset link");
     }
   };
 
@@ -26,7 +26,7 @@ const ForgotPasswordPage = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md bg-surface-container-low p-10 shadow-2xl border-none relative overflow-hidden group"
       >
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-clinical-blue/5 rounded-full blur-3xl group-hover:bg-clinical-blue/10 transition-all duration-700" />
@@ -38,10 +38,8 @@ const ForgotPasswordPage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tighter">
-                PraiseJah{' '}
-                <span className="text-on-surface-variant font-normal">
-                  EMR
-                </span>
+                PraiseJah{" "}
+                <span className="text-on-surface-variant font-normal">EMR</span>
               </h1>
               <p className="mono-label text-clinical-blue mt-1">
                 Password Recovery
@@ -71,8 +69,8 @@ const ForgotPasswordPage = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <p className="text-xs text-on-surface-variant text-center">
-                Enter your email address and we'll send you a link to reset
-                your password.
+                Enter your email address and we'll send you a link to reset your
+                password.
               </p>
 
               <div className="space-y-1">
@@ -100,9 +98,7 @@ const ForgotPasswordPage = () => {
                 disabled={forgotPassword.isPending}
                 className="w-full bg-clinical-blue py-3 px-6 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
               >
-                {forgotPassword.isPending
-                  ? 'SENDING...'
-                  : 'SEND RESET LINK'}
+                {forgotPassword.isPending ? "SENDING..." : "SEND RESET LINK"}
                 {!forgotPassword.isPending && (
                   <ArrowRight
                     size={14}

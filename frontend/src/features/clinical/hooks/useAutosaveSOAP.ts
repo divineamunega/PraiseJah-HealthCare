@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { notesApi, type ClinicalNote, type CreateNoteRequest } from '../api/notes.api';
+import { useEffect, useRef, useCallback, useState } from "react";
+import { notesApi, type CreateNoteRequest } from "../api/notes.api";
 
 export interface SoapData {
   chiefComplaint: string;
@@ -13,7 +13,7 @@ export interface AutosaveState {
   isSaving: boolean;
   lastSavedAt: Date | null;
   error: string | null;
-  syncStatus: 'idle' | 'saving' | 'synced' | 'error';
+  syncStatus: "idle" | "saving" | "synced" | "error";
 }
 
 export interface AutosaveReturn {
@@ -31,7 +31,7 @@ interface AutosaveOptions {
 
 /**
  * Production-grade autosave hook for SOAP clinical notes.
- * 
+ *
  * Features:
  * - Debounced saves to reduce server load
  * - Version tracking for optimistic concurrency
@@ -39,7 +39,7 @@ interface AutosaveOptions {
  * - Stale data refresh when version mismatch detected
  * - Retry logic with exponential backoff
  * - Proper cleanup on unmount
- * 
+ *
  * @param options.visitId - The visit being documented
  * @param options.data - Current SOAP form data
  * @param options.debounceMs - Delay before saving (default: 1500ms)
@@ -55,13 +55,13 @@ export function useAutosaveSOAP({
     isSaving: false,
     lastSavedAt: null,
     error: null,
-    syncStatus: 'idle',
+    syncStatus: "idle",
   });
 
   // Refs to track mutable state without causing re-renders
-  const versionRef = useRef<string>('0');
+  const versionRef = useRef<string>("0");
   const noteIdRef = useRef<string | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
@@ -73,18 +73,18 @@ export function useAutosaveSOAP({
   // Serialize SOAP data to content format
   const serializeContent = useCallback((soap: SoapData): string => {
     return [
-      '[SUBJECTIVE]',
+      "[SUBJECTIVE]",
       soap.subjective,
-      '',
-      '[OBJECTIVE]',
+      "",
+      "[OBJECTIVE]",
       soap.objective,
-      '',
-      '[ASSESSMENT]',
+      "",
+      "[ASSESSMENT]",
       soap.assessment,
-      '',
-      '[PLAN]',
+      "",
+      "[PLAN]",
       soap.plan,
-    ].join('\n');
+    ].join("\n");
   }, []);
 
   // Check if data has meaningful content to save
@@ -118,7 +118,12 @@ export function useAutosaveSOAP({
       version: versionRef.current,
     };
 
-    setState(prev => ({ ...prev, isSaving: true, error: null, syncStatus: 'saving' }));
+    setState((prev) => ({
+      ...prev,
+      isSaving: true,
+      error: null,
+      syncStatus: "saving",
+    }));
 
     try {
       const result = await notesApi.create(requestData);
@@ -134,20 +139,20 @@ export function useAutosaveSOAP({
         isSaving: false,
         lastSavedAt: new Date(),
         error: null,
-        syncStatus: 'synced',
+        syncStatus: "synced",
       });
 
       // Reset to idle after showing synced status
       setTimeout(() => {
         if (isMountedRef.current) {
-          setState(prev => ({ ...prev, syncStatus: 'idle' }));
+          setState((prev) => ({ ...prev, syncStatus: "idle" }));
         }
       }, 2000);
     } catch (error: any) {
       if (!isMountedRef.current) return;
 
       // Handle abort (not an error)
-      if (error.name === 'AbortError' || error.name === 'CanceledError') {
+      if (error.name === "AbortError" || error.name === "CanceledError") {
         return;
       }
 
@@ -166,13 +171,14 @@ export function useAutosaveSOAP({
 
       // Max retries exceeded
       retryCountRef.current = 0;
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to save';
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to save";
 
       setState({
         isSaving: false,
         lastSavedAt: state.lastSavedAt,
         error: errorMessage,
-        syncStatus: 'error',
+        syncStatus: "error",
       });
 
       if (onError) {
@@ -208,14 +214,14 @@ export function useAutosaveSOAP({
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    versionRef.current = '0';
+    versionRef.current = "0";
     noteIdRef.current = null;
     retryCountRef.current = 0;
     setState({
       isSaving: false,
       lastSavedAt: null,
       error: null,
-      syncStatus: 'idle',
+      syncStatus: "idle",
     });
   }, []);
 
@@ -226,7 +232,14 @@ export function useAutosaveSOAP({
     }
     // Only trigger on data changes, not state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitId, data.chiefComplaint, data.subjective, data.objective, data.assessment, data.plan]);
+  }, [
+    visitId,
+    data.chiefComplaint,
+    data.subjective,
+    data.objective,
+    data.assessment,
+    data.plan,
+  ]);
 
   // Load existing note version on mount or visitId change
   useEffect(() => {
@@ -240,16 +253,16 @@ export function useAutosaveSOAP({
           noteIdRef.current = existingNote.id;
 
           // If we have an existing note, mark as synced
-          setState(prev => ({ ...prev, syncStatus: 'synced' }));
+          setState((prev) => ({ ...prev, syncStatus: "synced" }));
           setTimeout(() => {
             if (isMountedRef.current) {
-              setState(prev => ({ ...prev, syncStatus: 'idle' }));
+              setState((prev) => ({ ...prev, syncStatus: "idle" }));
             }
           }, 2000);
         }
       } catch (error) {
         // Silently handle - note might not exist yet
-        console.debug('No existing note found for visit:', visitId);
+        console.debug("No existing note found for visit:", visitId);
       }
     };
 

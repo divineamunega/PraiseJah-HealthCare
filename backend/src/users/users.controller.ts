@@ -20,13 +20,18 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Audit } from '../audit/decorators/audit.decorator.js';
 import { AuditTargetType, AuditAction, Role } from '@prisma/client';
 import type { User } from '@prisma/client';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) { }
+  constructor(private readonly userService: UsersService) {}
 
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
@@ -36,10 +41,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Create a new user (Admin only)' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async create(
-    @Body() createUserDto: CreateUserDto,
-    @CurrentUser() creator,
-  ) {
+  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() creator) {
     return this.userService.create(createUserDto, creator);
   }
 
@@ -76,7 +78,10 @@ export class UsersController {
   @Post(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @Audit({ action: AuditAction.USER_STATUS_UPDATED, targetType: AuditTargetType.USER })
+  @Audit({
+    action: AuditAction.USER_STATUS_UPDATED,
+    targetType: AuditTargetType.USER,
+  })
   @ApiOperation({ summary: 'Update user status (Admin only)' })
   async updateStatus(
     @CurrentUser() actor: User,

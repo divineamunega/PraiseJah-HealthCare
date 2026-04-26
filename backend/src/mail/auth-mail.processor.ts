@@ -18,7 +18,9 @@ export class AuthMailProcessor extends WorkerHost {
 
     try {
       await this.mailService.sendPasswordResetEmail(name, email, resetToken);
-      this.loggerService.info(`✅ Password reset email sent successfully to ${email}`);
+      this.loggerService.info(
+        `✅ Password reset email sent successfully to ${email}`,
+      );
     } catch (error) {
       this.loggerService.error(
         `❌ Failed to send password reset email to ${email}`,

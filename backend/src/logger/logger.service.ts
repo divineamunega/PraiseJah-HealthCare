@@ -16,12 +16,17 @@ export class LoggerService implements NestLoggerService {
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, message, context, trace }) => {
-              return `${timestamp} [${context || 'Application'}] ${level}: ${message}${trace ? `\n${trace}` : ''}`;
-            }),
+            winston.format.printf(
+              ({ timestamp, level, message, context, trace }) => {
+                return `${timestamp} [${context || 'Application'}] ${level}: ${message}${trace ? `\n${trace}` : ''}`;
+              },
+            ),
           ),
         }),
-        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston.transports.File({
+          filename: 'logs/error.log',
+          level: 'error',
+        }),
         new winston.transports.File({ filename: 'logs/combined.log' }),
       ],
     });
@@ -32,17 +37,17 @@ export class LoggerService implements NestLoggerService {
   }
 
   fatal(message: any, trace?: any, context?: string) {
-    this.logger.error(message, { 
-      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace), 
-      context, 
-      fatal: true 
+    this.logger.error(message, {
+      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace),
+      context,
+      fatal: true,
     });
   }
 
   error(message: any, trace?: any, context?: string) {
-    this.logger.error(message, { 
-      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace), 
-      context 
+    this.logger.error(message, {
+      trace: trace instanceof Error ? trace.stack : JSON.stringify(trace),
+      context,
     });
   }
 

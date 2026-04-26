@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { useResetPassword } from '@/features/auth/hooks/useAuth';
-import { Shield, Lock, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Link, useSearchParams, useNavigate } from 'react-router';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { useResetPassword } from "@/features/auth/hooks/useAuth";
+import { Shield, Lock, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link, useSearchParams, useNavigate } from "react-router";
+import { toast } from "sonner";
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const token = searchParams.get("token") || "";
   const navigate = useNavigate();
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [succeeded, setSucceeded] = useState(false);
 
   const resetPassword = useResetPassword();
@@ -41,9 +41,9 @@ const ResetPasswordPage = () => {
     try {
       await resetPassword.mutateAsync({ token, newPassword });
       setSucceeded(true);
-      toast.success('Password reset successfully');
+      toast.success("Password reset successfully");
     } catch (err: any) {
-      toast.error(err.message || 'Failed to reset password');
+      toast.error(err.message || "Failed to reset password");
     }
   };
 
@@ -52,7 +52,7 @@ const ResetPasswordPage = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md bg-surface-container-low p-10 shadow-2xl border-none relative overflow-hidden group"
       >
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-clinical-blue/5 rounded-full blur-3xl group-hover:bg-clinical-blue/10 transition-all duration-700" />
@@ -64,10 +64,8 @@ const ResetPasswordPage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tighter">
-                PraiseJah{' '}
-                <span className="text-on-surface-variant font-normal">
-                  EMR
-                </span>
+                PraiseJah{" "}
+                <span className="text-on-surface-variant font-normal">EMR</span>
               </h1>
               <p className="mono-label text-clinical-blue mt-1">
                 Reset Password
@@ -90,7 +88,7 @@ const ResetPasswordPage = () => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 className="w-full bg-clinical-blue py-3 px-6 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-all"
               >
                 GO TO LOGIN
@@ -159,9 +157,7 @@ const ResetPasswordPage = () => {
                 }
                 className="w-full bg-clinical-blue py-3 px-6 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
               >
-                {resetPassword.isPending
-                  ? 'RESETTING...'
-                  : 'RESET PASSWORD'}
+                {resetPassword.isPending ? "RESETTING..." : "RESET PASSWORD"}
                 {!resetPassword.isPending && (
                   <ArrowRight
                     size={14}

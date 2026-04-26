@@ -1,18 +1,16 @@
 import {
   LayoutDashboard,
   Users,
-  Settings,
   LogOut,
   ShieldCheck,
   UserCheck,
-  Database,
   ClipboardList,
-  Activity,
-} from 'lucide-react';
-import { useAuthStore } from '@/features/auth/stores/auth.store';
-import { useLogout } from '@/features/auth/hooks/useAuth';
-import { useNavigate, useLocation } from 'react-router';
-import { motion } from 'framer-motion';
+  FlaskConical,
+} from "lucide-react";
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import { useLogout } from "@/features/auth/hooks/useAuth";
+import { useNavigate, useLocation } from "react-router";
+import { motion } from "framer-motion";
 
 interface NavItem {
   id: string;
@@ -24,22 +22,91 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   // Admin Routes
-  { id: 'admin_overview', path: '/admin', icon: LayoutDashboard, label: 'System Overview', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'staff', path: '/admin/staff', icon: UserCheck, label: 'Staff Directory', roles: ['SUPER_ADMIN', 'ADMIN'] },
-  { id: 'audit', path: '/admin/audit', icon: ShieldCheck, label: 'Security Vault', roles: ['SUPER_ADMIN', 'ADMIN'] },
+  {
+    id: "admin_overview",
+    path: "/admin",
+    icon: LayoutDashboard,
+    label: "System Overview",
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
+  {
+    id: "staff",
+    path: "/admin/staff",
+    icon: UserCheck,
+    label: "Staff Directory",
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
+  {
+    id: "audit",
+    path: "/admin/audit",
+    icon: ShieldCheck,
+    label: "Security Vault",
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
 
   // Doctor Routes
-  { id: 'doctor_dash', path: '/doctor', icon: LayoutDashboard, label: 'Clinical Cockpit', roles: ['DOCTOR'] },
-  { id: 'doctor_patients', path: '/doctor/patients', icon: Users, label: 'Patient Registry', roles: ['DOCTOR'] },
+  {
+    id: "doctor_dash",
+    path: "/doctor",
+    icon: LayoutDashboard,
+    label: "Clinical Cockpit",
+    roles: ["DOCTOR"],
+  },
+  {
+    id: "doctor_patients",
+    path: "/doctor/patients",
+    icon: Users,
+    label: "Patient Registry",
+    roles: ["DOCTOR"],
+  },
 
   // Nurse Routes
-  { id: 'nurse_dash', path: '/nurse', icon: LayoutDashboard, label: 'Nursing Station', roles: ['NURSE'] },
-  { id: 'nurse_queue', path: '/nurse/queue', icon: ClipboardList, label: 'Clinical Queue', roles: ['NURSE'] },
-  { id: 'nurse_patients', path: '/nurse/patients', icon: Users, label: 'Patient List', roles: ['NURSE'] },
+  {
+    id: "nurse_dash",
+    path: "/nurse",
+    icon: LayoutDashboard,
+    label: "Nursing Station",
+    roles: ["NURSE"],
+  },
+  {
+    id: "nurse_queue",
+    path: "/nurse/queue",
+    icon: ClipboardList,
+    label: "Clinical Queue",
+    roles: ["NURSE"],
+  },
+  {
+    id: "nurse_patients",
+    path: "/nurse/patients",
+    icon: Users,
+    label: "Patient List",
+    roles: ["NURSE"],
+  },
+
+  // Lab Routes
+  {
+    id: "lab_dash",
+    path: "/lab",
+    icon: FlaskConical,
+    label: "Diagnostic Lab",
+    roles: ["LAB_SCIENTIST"],
+  },
 
   // Secretary Routes
-  { id: 'secretary_dash', path: '/secretary', icon: LayoutDashboard, label: 'Front Desk', roles: ['SECRETARY'] },
-  { id: 'secretary_patients', path: '/secretary/patients', icon: Users, label: 'Patient Registry', roles: ['SECRETARY'] },
+  {
+    id: "secretary_dash",
+    path: "/secretary",
+    icon: LayoutDashboard,
+    label: "Front Desk",
+    roles: ["SECRETARY"],
+  },
+  {
+    id: "secretary_patients",
+    path: "/secretary/patients",
+    icon: Users,
+    label: "Patient Registry",
+    roles: ["SECRETARY"],
+  },
 ];
 
 const Sidebar = () => {
@@ -48,13 +115,13 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const role = user?.role || '';
+  const role = user?.role || "";
   const filteredItems = navItems.filter((item) => item.roles.includes(role));
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
-        navigate('/login');
+        navigate("/login");
       },
     });
   };
@@ -64,7 +131,8 @@ const Sidebar = () => {
       <div className="p-8">
         <h2 className="text-white text-xl font-bold tracking-tighter flex items-center gap-2">
           <div className="w-6 h-6 bg-clinical-blue rounded-sm" />
-          PraiseJah <span className="text-on-surface-variant font-normal">EMR</span>
+          PraiseJah{" "}
+          <span className="text-on-surface-variant font-normal">EMR</span>
         </h2>
       </div>
 
@@ -77,8 +145,8 @@ const Sidebar = () => {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all relative group ${
                 isActive
-                  ? 'text-white bg-surface-bright/10'
-                  : 'text-on-surface-variant hover:text-white hover:bg-surface-bright/5'
+                  ? "text-white bg-surface-bright/10"
+                  : "text-on-surface-variant hover:text-white hover:bg-surface-bright/5"
               }`}
             >
               {isActive && (
@@ -87,7 +155,10 @@ const Sidebar = () => {
                   className="absolute left-0 w-[2px] h-6 bg-clinical-blue"
                 />
               )}
-              <item.icon size={18} className={isActive ? 'text-clinical-blue' : ''} />
+              <item.icon
+                size={18}
+                className={isActive ? "text-clinical-blue" : ""}
+              />
               <span className="font-medium">{item.label}</span>
             </button>
           );

@@ -4,7 +4,12 @@ import { CreateLabOrderDto } from './dto/create-lab-order.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { VisitsGateway } from '../visits/visits.gateway.js';
-import { AuditAction, AuditTargetType, QueueStatus, User } from '@prisma/client';
+import {
+  AuditAction,
+  AuditTargetType,
+  QueueStatus,
+  User,
+} from '@prisma/client';
 
 @Injectable()
 export class LabOrdersService {
@@ -50,13 +55,17 @@ export class LabOrdersService {
     this.visitsGateway.broadcastVisitUpdate(dto.visitId);
 
     // 4. Record clinical audit trail
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.LAB_ORDER_CREATED,
-      targetType: AuditTargetType.LAB_ORDER,
-      targetId: order.id,
-      metadata: { visitId: dto.visitId, testName: dto.testName },
-    }).catch(err => this.logger.error(`Clinical audit failed: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.LAB_ORDER_CREATED,
+        targetType: AuditTargetType.LAB_ORDER,
+        targetId: order.id,
+        metadata: { visitId: dto.visitId, testName: dto.testName },
+      })
+      .catch((err) =>
+        this.logger.error(`Clinical audit failed: ${err.message}`),
+      );
 
     return order;
   }
@@ -66,5 +75,47 @@ export class LabOrdersService {
       where: { visitId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async complete(visitId: string, actor: User) {
+    // 1. Verify visit exists
+    const visit = await this.prisma.visit.findFirst({
+      where: { id: visitId, deletedAt: null },
+      include: { queueEntry: true },
+    });
+
+    if (!visit) {
+      throw new NotFoundException(`Visit with ID ${visitId} not found`);
+    }
+
+    // 2. Update queue status to READY_FOR_DOCTOR in a transaction
+    await this.prisma.$transaction(async (tx) => {
+      await tx.queueEntry.update({
+        where: { visitId },
+        data: {
+          status: QueueStatus.READY_FOR_DOCTOR,
+          userId: actor.id,
+        },
+      });
+    });
+
+    // 3. Broadcast real-time update
+    this.visitsGateway.broadcastQueueUpdate();
+    this.visitsGateway.broadcastVisitUpdate(visitId);
+
+    // 4. Record audit log
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.LAB_ORDER_COMPLETED,
+        targetType: AuditTargetType.VISIT,
+        targetId: visitId,
+        metadata: { visitId },
+      })
+      .catch((err) =>
+        this.logger.error(`Clinical audit failed: ${err.message}`),
+      );
+
+    return { success: true };
   }
 }
