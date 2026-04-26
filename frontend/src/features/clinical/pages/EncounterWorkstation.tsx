@@ -21,6 +21,7 @@ import {
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
 import { useLabs, useCreateLabOrder } from "../hooks/useLabs";
+import { usePrescriptions, useCreatePrescription } from "../hooks/usePrescriptions";
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
 import { useAutosaveSOAP, type SoapData } from "../hooks/useAutosaveSOAP";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,11 +61,20 @@ const EncounterWorkstation = () => {
   
   const completeVisit = useCompleteVisit();
   
-  const [activeTab, setActiveTab] = useState<'DOCUMENTATION' | 'LAB_ORDERS' | 'PHARMACY'>('DOCUMENTATION');
+  const [activeTab, setActiveTab] = useState<'DOCUMENTATION' | 'LAB_ORDERS' | 'E_PRESCRIPTION'>('DOCUMENTATION');
   const [testName, setTestName] = useState("");
 
+  const [prescriptionForm, setPrescriptionForm] = useState({
+    medication: "",
+    dosage: "",
+    frequency: "",
+    duration: "",
+  });
+
   const { data: labs, isLoading: isLoadingLabs } = useLabs(visitId!);
+  const { data: prescriptions, isLoading: isLoadingPrescriptions } = usePrescriptions(visitId!);
   const createLabOrder = useCreateLabOrder();
+  const createPrescription = useCreatePrescription();
   
   // SOAP Note State
   const [chiefComplaint, setChiefComplaint] = useState("");
@@ -160,6 +170,26 @@ const EncounterWorkstation = () => {
       testName: testName.trim(),
     });
     setTestName("");
+  };
+
+  const handleAddPrescription = async () => {
+    const { medication, dosage, frequency, duration } = prescriptionForm;
+    if (!medication.trim() || !dosage.trim() || !frequency.trim() || !visitId) return;
+
+    await createPrescription.mutateAsync({
+      visitId,
+      medication: medication.trim(),
+      dosage: dosage.trim(),
+      frequency: frequency.trim(),
+      duration: duration.trim() || undefined,
+    });
+
+    setPrescriptionForm({
+      medication: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+    });
   };
 
   const handleFinish = async () => {
@@ -299,7 +329,7 @@ const EncounterWorkstation = () => {
               {[
                 { id: 'DOCUMENTATION', label: 'Clinical Documentation', icon: FileText },
                 { id: 'LAB_ORDERS', label: 'Laboratory Requests', icon: Microscope },
-                { id: 'PHARMACY', label: 'E-Prescription', icon: Pill },
+                { id: 'E_PRESCRIPTION', label: 'E-Prescription', icon: Pill },
               ].map(tab => (
                  <button 
                   key={tab.id}
@@ -442,14 +472,116 @@ const EncounterWorkstation = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'PHARMACY' && (
+                {activeTab === 'E_PRESCRIPTION' && (
                   <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="h-full flex flex-col items-center justify-center opacity-10 space-y-4 py-40"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="p-10 max-w-5xl mx-auto space-y-10"
                   >
-                    <AlertCircle size={48} className="text-on-surface-variant" />
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Sub-Module Under Maintenance</p>
+                    <section className="space-y-6">
+                       <div className="flex flex-col gap-1">
+                          <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.4em] flex items-center gap-3">
+                             <Pill size={14} className="text-clinical-blue" />
+                             New Prescription
+                          </h4>
+                          <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">Issue electronic medications for this patient</p>
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Medication</label>
+                             <input 
+                               type="text"
+                               placeholder="e.g. Paracetamol"
+                               className="w-full bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                               value={prescriptionForm.medication}
+                               onChange={e => setPrescriptionForm(p => ({ ...p, medication: e.target.value }))}
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Dosage</label>
+                             <input 
+                               type="text"
+                               placeholder="e.g. 500mg"
+                               className="w-full bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                               value={prescriptionForm.dosage}
+                               onChange={e => setPrescriptionForm(p => ({ ...p, dosage: e.target.value }))}
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Frequency</label>
+                             <input 
+                               type="text"
+                               placeholder="e.g. Twice Daily"
+                               className="w-full bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                               value={prescriptionForm.frequency}
+                               onChange={e => setPrescriptionForm(p => ({ ...p, frequency: e.target.value }))}
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Duration (Optional)</label>
+                             <input 
+                               type="text"
+                               placeholder="e.g. 5 Days"
+                               className="w-full bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                               value={prescriptionForm.duration}
+                               onChange={e => setPrescriptionForm(p => ({ ...p, duration: e.target.value }))}
+                             />
+                          </div>
+                       </div>
+                       
+                       <div className="flex justify-end">
+                          <button 
+                            onClick={handleAddPrescription}
+                            disabled={createPrescription.isPending || !prescriptionForm.medication.trim() || !prescriptionForm.dosage.trim() || !prescriptionForm.frequency.trim()}
+                            className="bg-clinical-blue px-6 py-4 text-[10px] font-bold text-background hover:bg-clinical-blue/90 transition-all flex items-center gap-3 shadow-lg shadow-clinical-blue/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {createPrescription.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={16} />}
+                            Add Prescription
+                          </button>
+                       </div>
+                    </section>
+
+                    <section className="space-y-6">
+                       <div className="flex flex-col gap-1">
+                          <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.3em]">Active Prescriptions</h4>
+                          <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">Medications issued during this clinical session</p>
+                       </div>
+
+                       <div className="space-y-3">
+                          {isLoadingPrescriptions ? (
+                            <div className="p-12 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-30 gap-4">
+                               <Loader2 size={24} className="animate-spin" />
+                               <p className="text-[10px] font-bold uppercase tracking-widest">Fetching Prescriptions...</p>
+                            </div>
+                          ) : prescriptions && prescriptions.length > 0 ? (
+                            prescriptions.map((rx) => (
+                              <div key={rx.id} className="bg-surface-container-low border border-white/5 p-4 flex justify-between items-center group hover:border-clinical-blue/20 transition-all">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 bg-background border border-white/5 flex items-center justify-center">
+                                       <Pill size={14} className="text-clinical-blue/50" />
+                                    </div>
+                                    <div>
+                                       <p className="text-sm font-bold text-white uppercase tracking-tight">{rx.medication}</p>
+                                       <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+                                          {rx.dosage} • {rx.frequency} {rx.duration ? `• ${rx.duration}` : ''}
+                                       </p>
+                                    </div>
+                                 </div>
+                                 <div className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+                                    Issued {new Date(rx.createdAt).toLocaleTimeString()}
+                                 </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-12 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-30 gap-4">
+                               <Pill size={32} className="text-on-surface-variant" />
+                               <p className="text-[10px] font-bold uppercase tracking-widest">No prescriptions added yet</p>
+                            </div>
+                          )}
+                       </div>
+                    </section>
                   </motion.div>
                 )}
               </AnimatePresence>
