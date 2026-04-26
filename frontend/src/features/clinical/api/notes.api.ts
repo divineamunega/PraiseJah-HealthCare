@@ -6,6 +6,7 @@ export interface ClinicalNote {
   authorId: string;
   chiefComplaint?: string;
   content: string;
+  version: number;
   createdAt: string;
   updatedAt: string;
   author?: {
@@ -18,6 +19,7 @@ export interface CreateNoteRequest {
   visitId: string;
   chiefComplaint?: string;
   content: string;
+  version?: number;
 }
 
 export const notesApi = {
@@ -27,7 +29,7 @@ export const notesApi = {
   },
 
   findByVisit: async (visitId: string) => {
-    const res = await api.get<ClinicalNote[]>(`/clinical-notes/visit/${visitId}`);
+    const res = await api.get<ClinicalNote>(`/clinical-notes/visit/${visitId}`);
     return res.data;
   },
 

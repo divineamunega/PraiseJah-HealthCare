@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { 
   Activity, 
@@ -14,10 +14,12 @@ import {
   AlertCircle,
   FileText,
   CloudSync,
+  AlertTriangle,
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
-import { useNotes, useCreateNote } from "../hooks/useNotes";
+import { useNotes } from "../hooks/useNotes";
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
+import { useAutosaveSOAP, type SoapData } from "../hooks/useAutosaveSOAP";
 import { motion, AnimatePresence } from "framer-motion";
 
 const calculateAge = (dob: string | undefined) => {
@@ -32,33 +34,62 @@ const calculateAge = (dob: string | undefined) => {
   return age;
 };
 
+// Format time for display
+const formatLastSaved = (date: Date | null): string => {
+  if (!date) return '';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  
+  if (diffSec < 5) return 'just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  return date.toLocaleTimeString();
+};
+
 const EncounterWorkstation = () => {
   const { visitId } = useParams();
   const navigate = useNavigate();
   useClinicalSocket();
   
   const { data: visit, isLoading: isLoadingVisit } = useVisit(visitId!);
-  const { data: existingNote, isLoading: isLoadingNote } = useNotes(visitId!);
+  const { data: existingNote } = useNotes(visitId!);
   
-  const createNote = useCreateNote();
   const completeVisit = useCompleteVisit();
   
   const [activeTab, setActiveTab] = useState<'DOCUMENTATION' | 'DIAGNOSTICS' | 'PHARMACY'>('DOCUMENTATION');
   
   // SOAP Note State
   const [chiefComplaint, setChiefComplaint] = useState("");
-  const [soap, setSoap] = useState({
+  const [soap, setSoap] = useState<Pick<SoapData, 'subjective' | 'objective' | 'assessment' | 'plan'>>({
     subjective: "",
     objective: "",
     assessment: "",
     plan: ""
   });
 
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Build soapData for the autosave hook
+  const soapData: SoapData = {
+    chiefComplaint,
+    subjective: soap.subjective,
+    objective: soap.objective,
+    assessment: soap.assessment,
+    plan: soap.plan,
+  };
 
-  // Initial Data Population
+  // Use the autosave hook
+  const { state: autosaveState, saveNow } = useAutosaveSOAP({
+    visitId: visitId || '',
+    data: soapData,
+    debounceMs: 1500,
+    onError: (error) => {
+      console.error('Autosave failed:', error.message);
+    },
+  });
+
+  // Parse existing note content into SOAP fields
   useEffect(() => {
-    if (existingNote && !Array.isArray(existingNote)) {
+    if (existingNote && typeof existingNote === 'object') {
       setChiefComplaint((existingNote as any).chiefComplaint || "");
       
       // Extract SOAP parts from content string
@@ -77,31 +108,54 @@ const EncounterWorkstation = () => {
     }
   }, [existingNote]);
 
-  // Real-time Auto-save Logic (Debounced)
-  useEffect(() => {
-    if (!visitId || isLoadingNote) return;
+  // Get sync status display
+  const getSyncDisplay = () => {
+    switch (autosaveState.syncStatus) {
+      case 'saving':
+        return {
+          icon: <Loader2 size={16} className="animate-spin" />,
+          text: 'Auto-Saving...',
+          color: 'text-clinical-blue',
+          bgColor: 'bg-clinical-blue/10',
+        };
+      case 'synced':
+        return {
+          icon: <CheckCircle2 size={16} className="text-green-400" />,
+          text: autosaveState.lastSavedAt 
+            ? `Saved ${formatLastSaved(autosaveState.lastSavedAt)}`
+            : 'Chart Synced',
+          color: 'text-green-400',
+          bgColor: 'bg-green-400/10',
+        };
+      case 'error':
+        return {
+          icon: <AlertTriangle size={16} className="text-red-400" />,
+          text: 'Sync Error',
+          color: 'text-red-400',
+          bgColor: 'bg-red-400/10',
+        };
+      default:
+        return {
+          icon: <CloudSync size={16} className="text-on-surface-variant opacity-50" />,
+          text: 'Ready',
+          color: 'text-on-surface-variant',
+          bgColor: 'bg-white/5',
+        };
+    }
+  };
 
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-
-    saveTimerRef.current = setTimeout(async () => {
-      const content = `[SUBJECTIVE]\n${soap.subjective}\n\n[OBJECTIVE]\n${soap.objective}\n\n[ASSESSMENT]\n${soap.assessment}\n\n[PLAN]\n${soap.plan}`;
-      
-      if (chiefComplaint || soap.subjective || soap.objective || soap.assessment || soap.plan) {
-        await createNote.mutateAsync({
-          visitId,
-          chiefComplaint,
-          content
-        });
-      }
-    }, 1500); // Auto-save 1.5s after typing stops
-
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, [chiefComplaint, soap, visitId, isLoadingNote]);
+  const syncDisplay = getSyncDisplay();
 
   const handleFinish = async () => {
     if (!visitId) return;
+    
+    // Ensure any pending save is complete before finishing
+    if (autosaveState.isSaving) {
+      saveNow();
+      // Wait a moment for save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
     await completeVisit.mutateAsync(visitId, {
       onSuccess: () => navigate('/doctor')
     });
@@ -161,17 +215,17 @@ const EncounterWorkstation = () => {
         </div>
 
         <div className="flex items-center gap-6">
-           <div className="flex items-center gap-3 px-4 py-2 bg-background/50 border border-white/5 rounded-sm">
-              <CloudSync size={16} className={createNote.isPending ? "text-clinical-blue animate-spin" : "text-green-400 opacity-50"} />
-              <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">
-                 {createNote.isPending ? 'Auto-Saving...' : 'Chart Synced'}
+           <div className={`flex items-center gap-3 px-4 py-2 ${syncDisplay.bgColor} border border-white/5 rounded-sm`}>
+              {syncDisplay.icon}
+              <p className={`text-[9px] font-bold ${syncDisplay.color} uppercase tracking-widest`}>
+                 {syncDisplay.text}
               </p>
            </div>
            
            <button 
              onClick={handleFinish}
              disabled={completeVisit.isPending}
-             className="bg-green-500 px-6 py-3 text-[10px] font-bold text-white hover:bg-green-400 transition-all flex items-center gap-3 shadow-lg shadow-green-500/10 uppercase tracking-widest"
+             className="bg-green-500 px-6 py-3 text-[10px] font-bold text-white hover:bg-green-400 transition-all flex items-center gap-3 shadow-lg shadow-green-500/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
            >
              {completeVisit.isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={16} />}
              Authorize & Complete
