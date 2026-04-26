@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '../stores/auth.store';
-import { refreshTokens, getMe } from '../api/auth.api';
-import { setAccessToken } from '../utils/token.util';
+import { useEffect, useState } from "react";
+import { useAuthStore } from "../stores/auth.store";
+import { refreshTokens, getMe } from "../api/auth.api";
+import { setAccessToken } from "../utils/token.util";
 
 // Loading spinner component
 const LoadingSpinner = () => (

@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useChangePassword, useLogout } from '@/features/auth/hooks/useAuth';
-import { useNavigate } from 'react-router';
-import { Shield, Lock, ArrowRight, LogOut } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { useChangePassword, useLogout } from "@/features/auth/hooks/useAuth";
+import { useNavigate } from "react-router";
+import { Shield, Lock, ArrowRight, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const ChangePasswordPage = () => {
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const changePassword = useChangePassword();
   const logout = useLogout();
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const ChangePasswordPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -26,23 +26,23 @@ const ChangePasswordPage = () => {
         newPassword,
         confirmPassword,
       });
-      toast.success('Password changed successfully. Please login again.');
-      
+      toast.success("Password changed successfully. Please login again.");
+
       // Logout after password change to force fresh login with ACTIVE status
       logout.mutate(undefined, {
         onSuccess: () => {
-          navigate('/login');
+          navigate("/login");
         },
       });
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to change password');
+      toast.error(err.response?.data?.message || "Failed to change password");
     }
   };
 
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
-        navigate('/login');
+        navigate("/login");
       },
     });
   };
@@ -52,7 +52,7 @@ const ChangePasswordPage = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md bg-surface-container-low p-10 shadow-2xl border-none relative overflow-hidden group"
       >
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-clinical-blue/5 rounded-full blur-3xl group-hover:bg-clinical-blue/10 transition-all duration-700" />
@@ -63,17 +63,29 @@ const ChangePasswordPage = () => {
               <Lock size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tighter">Security <span className="text-on-surface-variant font-normal">Update</span></h1>
-              <p className="mono-label text-clinical-blue mt-1">First-time Activation Required</p>
+              <h1 className="text-2xl font-bold text-white tracking-tighter">
+                Security{" "}
+                <span className="text-on-surface-variant font-normal">
+                  Update
+                </span>
+              </h1>
+              <p className="mono-label text-clinical-blue mt-1">
+                First-time Activation Required
+              </p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="mono-label text-on-surface-variant">Current Password</label>
+                <label className="mono-label text-on-surface-variant">
+                  Current Password
+                </label>
                 <div className="flex items-center gap-3 bg-background border border-white/5 p-3 focus-within:border-clinical-blue transition-colors group/input">
-                  <Lock size={16} className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors" />
+                  <Lock
+                    size={16}
+                    className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors"
+                  />
                   <input
                     type="password"
                     value={oldPassword}
@@ -86,9 +98,14 @@ const ChangePasswordPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="mono-label text-on-surface-variant">New Password</label>
+                <label className="mono-label text-on-surface-variant">
+                  New Password
+                </label>
                 <div className="flex items-center gap-3 bg-background border border-white/5 p-3 focus-within:border-clinical-blue transition-colors group/input">
-                  <Shield size={16} className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors" />
+                  <Shield
+                    size={16}
+                    className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors"
+                  />
                   <input
                     type="password"
                     value={newPassword}
@@ -101,9 +118,14 @@ const ChangePasswordPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="mono-label text-on-surface-variant">Confirm New Password</label>
+                <label className="mono-label text-on-surface-variant">
+                  Confirm New Password
+                </label>
                 <div className="flex items-center gap-3 bg-background border border-white/5 p-3 focus-within:border-clinical-blue transition-colors group/input">
-                  <Shield size={16} className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors" />
+                  <Shield
+                    size={16}
+                    className="text-on-surface-variant group-focus-within/input:text-clinical-blue transition-colors"
+                  />
                   <input
                     type="password"
                     value={confirmPassword}
@@ -121,8 +143,13 @@ const ChangePasswordPage = () => {
               disabled={changePassword.isPending}
               className="w-full bg-clinical-blue py-3 px-6 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
             >
-              {changePassword.isPending ? 'UPDATING...' : 'UPDATE & ACTIVATE'}
-              {!changePassword.isPending && <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />}
+              {changePassword.isPending ? "UPDATING..." : "UPDATE & ACTIVATE"}
+              {!changePassword.isPending && (
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              )}
             </button>
           </form>
 

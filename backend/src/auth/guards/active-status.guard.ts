@@ -33,6 +33,8 @@ export class ActiveStatusGuard implements CanActivate {
       );
     }
 
-    throw new ForbiddenException('You do not have permission to access this resource.');
+    throw new ForbiddenException(
+      'You do not have permission to access this resource.',
+    );
   }
 }

@@ -1,9 +1,9 @@
-import api from '@/lib/axios';
-import { type User, type UserRole, type UserStatus } from '@/types/user';
+import api from "@/lib/axios";
+import { type User, type UserRole, type UserStatus } from "@/types/user";
 
 export const usersApi = {
   getAll: async () => {
-    const { data } = await api.get<User[]>('/users');
+    const { data } = await api.get<User[]>("/users");
     return data;
   },
 
@@ -12,8 +12,13 @@ export const usersApi = {
     return data;
   },
 
-  create: async (userData: { firstName: string; lastName: string; email: string; role: UserRole }) => {
-    const { data } = await api.post<User>('/users/create', userData);
+  create: async (userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: UserRole;
+  }) => {
+    const { data } = await api.post<User>("/users/create", userData);
     return data;
   },
 

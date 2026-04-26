@@ -15,4 +15,4 @@ import { AuditInterceptor } from './interceptors/audit.interceptor.js';
   ],
   exports: [AuditService],
 })
-export class AuditModule { }
+export class AuditModule {}

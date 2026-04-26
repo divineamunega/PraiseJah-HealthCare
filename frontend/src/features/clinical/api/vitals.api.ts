@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 export interface Vital {
   id: string;
@@ -27,7 +27,7 @@ export interface CreateVitalRequest {
 
 export const vitalsApi = {
   create: async (data: CreateVitalRequest) => {
-    const res = await api.post<Vital>('/vitals', data);
+    const res = await api.post<Vital>("/vitals", data);
     return res.data;
   },
 
@@ -37,7 +37,7 @@ export const vitalsApi = {
   },
 
   findRecent: async () => {
-    const res = await api.get<any[]>('/vitals/recent');
+    const res = await api.get<any[]>("/vitals/recent");
     return res.data;
   },
 

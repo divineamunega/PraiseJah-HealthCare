@@ -12,7 +12,9 @@ export class CreateLabOrderDto {
   @IsString()
   readonly testName!: string;
 
-  @ApiPropertyOptional({ example: 'Check for malaria parasites and hemoglobin levels' })
+  @ApiPropertyOptional({
+    example: 'Check for malaria parasites and hemoglobin levels',
+  })
   @IsOptional()
   @IsString()
   readonly notes?: string;

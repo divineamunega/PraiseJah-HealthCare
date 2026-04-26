@@ -1,10 +1,4 @@
-import {
-  jest,
-  describe,
-  beforeEach,
-  it,
-  expect,
-} from '@jest/globals';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PatientsService } from './patients.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -63,7 +57,11 @@ describe('PatientsService', () => {
         dateOfBirth: '1990-01-01',
         sex: Sex.MALE,
       };
-      const expectedPatient = { id: '1', ...dto, dateOfBirth: new Date(dto.dateOfBirth) };
+      const expectedPatient = {
+        id: '1',
+        ...dto,
+        dateOfBirth: new Date(dto.dateOfBirth),
+      };
       mockPrismaService.patient.create.mockResolvedValue(expectedPatient);
 
       const result = await service.create(dto);
@@ -80,11 +78,11 @@ describe('PatientsService', () => {
 
   describe('findAll', () => {
     it('should return paginated and sorted patients', async () => {
-      const queryDto = { 
-        page: 1, 
-        limit: 10, 
-        sortBy: PatientSortBy.CREATED_AT, 
-        sortOrder: SortOrder.DESC 
+      const queryDto = {
+        page: 1,
+        limit: 10,
+        sortBy: PatientSortBy.CREATED_AT,
+        sortOrder: SortOrder.DESC,
       };
       const patients = [{ id: '1', firstName: 'John' }];
       mockPrismaService.patient.findMany.mockResolvedValue(patients);
@@ -98,11 +96,13 @@ describe('PatientsService', () => {
         page: 1,
         lastPage: 1,
       });
-      expect(mockPrismaService.patient.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        skip: 0,
-        take: 10,
-        orderBy: { createdAt: 'desc' },
-      }));
+      expect(mockPrismaService.patient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
     });
   });
 
@@ -119,13 +119,20 @@ describe('PatientsService', () => {
     it('should throw NotFoundException if patient not found', async () => {
       mockPrismaService.patient.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('1')).rejects.toThrow('Patient with ID 1 not found');
+      await expect(service.findOne('1')).rejects.toThrow(
+        'Patient with ID 1 not found',
+      );
     });
 
     it('should throw NotFoundException if patient is soft-deleted', async () => {
-      mockPrismaService.patient.findUnique.mockResolvedValue({ id: '1', deletedAt: new Date() });
+      mockPrismaService.patient.findUnique.mockResolvedValue({
+        id: '1',
+        deletedAt: new Date(),
+      });
 
-      await expect(service.findOne('1')).rejects.toThrow('Patient with ID 1 not found');
+      await expect(service.findOne('1')).rejects.toThrow(
+        'Patient with ID 1 not found',
+      );
     });
   });
 });

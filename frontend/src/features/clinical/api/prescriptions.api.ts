@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
 export interface Prescription {
   id: string;
@@ -24,12 +24,14 @@ export interface CreatePrescriptionRequest {
 
 export const prescriptionsApi = {
   create: async (data: CreatePrescriptionRequest) => {
-    const res = await api.post<Prescription>('/prescriptions', data);
+    const res = await api.post<Prescription>("/prescriptions", data);
     return res.data;
   },
 
   findByVisit: async (visitId: string) => {
-    const res = await api.get<Prescription[]>(`/prescriptions/visit/${visitId}`);
+    const res = await api.get<Prescription[]>(
+      `/prescriptions/visit/${visitId}`,
+    );
     return res.data;
   },
 };

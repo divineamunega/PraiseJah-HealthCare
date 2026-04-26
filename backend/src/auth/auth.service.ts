@@ -14,7 +14,12 @@ import ms from 'ms';
 import LoginDto from './dto/login.dto.js';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../audit/audit.service.js';
-import { AuditTargetType, AuditAction, ActiveStatus, Prisma } from '@prisma/client';
+import {
+  AuditTargetType,
+  AuditAction,
+  ActiveStatus,
+  Prisma,
+} from '@prisma/client';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
@@ -29,11 +34,16 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly auditService: AuditService,
     private readonly authMailService: AuthMailService,
-  ) { }
+  ) {}
 
   async login(
     loginDto: LoginDto,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
+    requestInfo: {
+      ip: string;
+      userAgent: string | null;
+      deviceInfo?: string;
+      correlationId?: string;
+    },
   ) {
     try {
       // 1. look for user in the database
@@ -55,12 +65,15 @@ export class AuthService {
           userAgent: requestInfo.userAgent || undefined,
           correlationId: requestInfo.correlationId,
         });
-        throw new UnauthorizedException("Incorrect email or password");
+        throw new UnauthorizedException('Incorrect email or password');
       }
 
       // 4. Generate tokens using helpers
       const accessToken = this.generateAccessToken(user);
-      const refreshToken = await this.generateAndStoreRefreshToken(user, requestInfo);
+      const refreshToken = await this.generateAndStoreRefreshToken(
+        user,
+        requestInfo,
+      );
 
       // 6. Log successful login
       await this.auditService.createLog({
@@ -80,7 +93,10 @@ export class AuthService {
       await this.auditService.createLog({
         action: AuditAction.LOGIN_FAILURE,
         entity: 'USER',
-        metadata: { email: loginDto.email, reason: err.message || 'Unknown failure' },
+        metadata: {
+          email: loginDto.email,
+          reason: err.message || 'Unknown failure',
+        },
         ipAddress: requestInfo.ip,
         userAgent: requestInfo.userAgent || undefined,
         correlationId: requestInfo.correlationId,
@@ -92,7 +108,12 @@ export class AuthService {
 
   async refreshTokens(
     combinedToken: string,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
+    requestInfo: {
+      ip: string;
+      userAgent: string | null;
+      deviceInfo?: string;
+      correlationId?: string;
+    },
   ) {
     try {
       const [id, plainToken] = combinedToken.split('.');
@@ -138,7 +159,9 @@ export class AuthService {
       return { accessToken, refreshToken: newRefreshToken, user };
     } catch (err) {
       if (err instanceof UnauthorizedException) throw err;
-      throw new InternalServerErrorException('An unexpected error occurred during token refresh');
+      throw new InternalServerErrorException(
+        'An unexpected error occurred during token refresh',
+      );
     }
   }
 
@@ -173,7 +196,11 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto, correlationId?: string) {
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+    correlationId?: string,
+  ) {
     try {
       // 1. Verify confirm password matches
       if (dto.newPassword !== dto.confirmPassword) {
@@ -184,7 +211,10 @@ export class AuthService {
       const user = await this.userService.findById(userId);
 
       // 3. Verify old password
-      const isCorrect = await bcrypt.compare(dto.oldPassword, user.passwordHash);
+      const isCorrect = await bcrypt.compare(
+        dto.oldPassword,
+        user.passwordHash,
+      );
       if (!isCorrect) {
         await this.auditService.createLog({
           actorId: userId,
@@ -230,11 +260,16 @@ export class AuthService {
 
       return { message };
     } catch (err) {
-      if (err instanceof BadRequestException || err instanceof NotFoundException) {
+      if (
+        err instanceof BadRequestException ||
+        err instanceof NotFoundException
+      ) {
         throw err;
       }
 
-      throw new InternalServerErrorException('An unexpected error occurred while changing password');
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while changing password',
+      );
     }
   }
 
@@ -245,7 +280,10 @@ export class AuthService {
 
     // To prevent email enumeration, we return success even if the user doesn't exist
     if (!user) {
-      return { message: 'If your email is in our system, you will receive a reset link shortly.' };
+      return {
+        message:
+          'If your email is in our system, you will receive a reset link shortly.',
+      };
     }
 
     // Generate a secure token
@@ -276,7 +314,10 @@ export class AuthService {
       correlationId,
     });
 
-    return { message: 'If your email is in our system, you will receive a reset link shortly.' };
+    return {
+      message:
+        'If your email is in our system, you will receive a reset link shortly.',
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto, correlationId?: string) {
@@ -289,7 +330,10 @@ export class AuthService {
 
     let targetUser: any = null;
     for (const user of users) {
-      if (user.passwordResetTokenHash && await bcrypt.compare(dto.token, user.passwordResetTokenHash)) {
+      if (
+        user.passwordResetTokenHash &&
+        (await bcrypt.compare(dto.token, user.passwordResetTokenHash))
+      ) {
         targetUser = user;
         break;
       }
@@ -307,7 +351,10 @@ export class AuthService {
         passwordHash,
         passwordResetTokenHash: null,
         passwordResetExpires: null,
-        status: targetUser.status === ActiveStatus.PENDING ? ActiveStatus.ACTIVE : targetUser.status,
+        status:
+          targetUser.status === ActiveStatus.PENDING
+            ? ActiveStatus.ACTIVE
+            : targetUser.status,
       },
     });
 
@@ -325,7 +372,10 @@ export class AuthService {
       correlationId,
     });
 
-    return { message: 'Password has been reset successfully. Please login with your new password.' };
+    return {
+      message:
+        'Password has been reset successfully. Please login with your new password.',
+    };
   }
 
   private generateAccessToken(user: any): string {
@@ -340,7 +390,12 @@ export class AuthService {
 
   private async generateAndStoreRefreshToken(
     user: any,
-    requestInfo: { ip: string; userAgent: string | null; deviceInfo?: string; correlationId?: string },
+    requestInfo: {
+      ip: string;
+      userAgent: string | null;
+      deviceInfo?: string;
+      correlationId?: string;
+    },
   ): Promise<string> {
     const plainToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = await bcrypt.hash(plainToken, 10);

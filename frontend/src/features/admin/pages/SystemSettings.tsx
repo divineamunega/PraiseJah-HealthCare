@@ -1,14 +1,24 @@
-import { useAuthStore } from '@/features/auth/stores/auth.store';
-import { Settings, Database, Shield, Save, RefreshCw, Download, Upload, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import {
+  Settings,
+  Database,
+  Shield,
+  Save,
+  RefreshCw,
+  Download,
+  Upload,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 
 const SUPER_ADMIN_SystemSettings = () => {
   useAuthStore();
 
   const systemSettings = {
-    hospitalName: 'PraiseJah HealthCare',
-    timezone: 'UTC',
-    dateFormat: 'MM/DD/YYYY',
-    language: 'en-US',
+    hospitalName: "PraiseJah HealthCare",
+    timezone: "UTC",
+    dateFormat: "MM/DD/YYYY",
+    language: "en-US",
     sessionTimeout: 30,
     maxLoginAttempts: 5,
     passwordMinLength: 8,
@@ -17,26 +27,30 @@ const SUPER_ADMIN_SystemSettings = () => {
   };
 
   const emailSettings = {
-    smtpHost: 'smtp.resend.com',
+    smtpHost: "smtp.resend.com",
     smtpPort: 587,
-    fromEmail: 'noreply@praisejah.com',
-    fromName: 'PraiseJah EMR',
+    fromEmail: "noreply@praisejah.com",
+    fromName: "PraiseJah EMR",
   };
 
   const backupSettings = {
     autoBackup: true,
-    backupFrequency: 'daily',
+    backupFrequency: "daily",
     retentionDays: 30,
-    lastBackup: '2026-04-20 02:00:00',
-    nextBackup: '2026-04-21 02:00:00',
+    lastBackup: "2026-04-20 02:00:00",
+    nextBackup: "2026-04-21 02:00:00",
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-end justify-between">
         <div>
-          <p className="mono-label text-clinical-blue mb-1 uppercase">System Configuration</p>
-          <h1 className="text-3xl font-bold text-white tracking-tighter">System Settings</h1>
+          <p className="mono-label text-clinical-blue mb-1 uppercase">
+            System Configuration
+          </p>
+          <h1 className="text-3xl font-bold text-white tracking-tighter">
+            System Settings
+          </h1>
         </div>
         <button className="bg-clinical-blue px-6 py-2 text-xs font-bold text-white hover:bg-clinical-blue/90 transition-colors flex items-center gap-2">
           <Save size={14} />
@@ -55,16 +69,20 @@ const SUPER_ADMIN_SystemSettings = () => {
             {Object.entries(systemSettings).map(([key, value]) => (
               <div key={key} className="space-y-1">
                 <label className="mono-label text-on-surface-variant text-[10px] uppercase">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                  {key.replace(/([A-Z])/g, " $1").trim()}
                 </label>
-                {typeof value === 'boolean' ? (
+                {typeof value === "boolean" ? (
                   <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-sm border ${value ? 'bg-clinical-blue border-clinical-blue' : 'border-white/20'}`} />
-                    <span className="text-xs text-white">{value ? 'Enabled' : 'Disabled'}</span>
+                    <div
+                      className={`w-4 h-4 rounded-sm border ${value ? "bg-clinical-blue border-clinical-blue" : "border-white/20"}`}
+                    />
+                    <span className="text-xs text-white">
+                      {value ? "Enabled" : "Disabled"}
+                    </span>
                   </div>
                 ) : (
                   <input
-                    type={typeof value === 'number' ? 'number' : 'text'}
+                    type={typeof value === "number" ? "number" : "text"}
                     defaultValue={value}
                     className="w-full bg-background border border-white/5 p-2 text-sm text-white focus:border-clinical-blue outline-none"
                   />
@@ -84,10 +102,10 @@ const SUPER_ADMIN_SystemSettings = () => {
             {Object.entries(emailSettings).map(([key, value]) => (
               <div key={key} className="space-y-1">
                 <label className="mono-label text-on-surface-variant text-[10px] uppercase">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                  {key.replace(/([A-Z])/g, " $1").trim()}
                 </label>
                 <input
-                  type={typeof value === 'number' ? 'number' : 'text'}
+                  type={typeof value === "number" ? "number" : "text"}
                   defaultValue={value}
                   className="w-full bg-background border border-white/5 p-2 text-sm text-white focus:border-clinical-blue outline-none"
                 />
@@ -110,11 +128,16 @@ const SUPER_ADMIN_SystemSettings = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             {Object.entries(backupSettings).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between p-3 bg-background/50 border border-white/5">
+              <div
+                key={key}
+                className="flex items-center justify-between p-3 bg-background/50 border border-white/5"
+              >
                 <span className="text-xs text-on-surface-variant uppercase tracking-wider">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                  {key.replace(/([A-Z])/g, " $1").trim()}
                 </span>
-                <span className="data-value text-xs text-white">{String(value)}</span>
+                <span className="data-value text-xs text-white">
+                  {String(value)}
+                </span>
               </div>
             ))}
           </div>
@@ -143,16 +166,35 @@ const SUPER_ADMIN_SystemSettings = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { label: 'Database', status: 'Healthy', color: 'text-green-400' },
-            { label: 'Email Service', status: 'Operational', color: 'text-green-400' },
-            { label: 'Redis Queue', status: 'Operational', color: 'text-green-400' },
-            { label: 'API Server', status: 'Running', color: 'text-green-400' },
-            { label: 'Disk Space', status: '45% Used', color: 'text-yellow-400' },
-            { label: 'Memory', status: '62% Used', color: 'text-yellow-400' },
+            { label: "Database", status: "Healthy", color: "text-green-400" },
+            {
+              label: "Email Service",
+              status: "Operational",
+              color: "text-green-400",
+            },
+            {
+              label: "Redis Queue",
+              status: "Operational",
+              color: "text-green-400",
+            },
+            { label: "API Server", status: "Running", color: "text-green-400" },
+            {
+              label: "Disk Space",
+              status: "45% Used",
+              color: "text-yellow-400",
+            },
+            { label: "Memory", status: "62% Used", color: "text-yellow-400" },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between p-3 bg-background/50 border border-white/5">
-              <span className="text-xs text-on-surface-variant uppercase tracking-wider">{item.label}</span>
-              <span className={`data-value text-xs font-bold ${item.color} flex items-center gap-2`}>
+            <div
+              key={item.label}
+              className="flex items-center justify-between p-3 bg-background/50 border border-white/5"
+            >
+              <span className="text-xs text-on-surface-variant uppercase tracking-wider">
+                {item.label}
+              </span>
+              <span
+                className={`data-value text-xs font-bold ${item.color} flex items-center gap-2`}
+              >
                 <CheckCircle size={12} />
                 {item.status}
               </span>

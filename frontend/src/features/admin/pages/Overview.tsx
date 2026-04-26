@@ -1,5 +1,5 @@
-import { useAuthStore } from '@/features/auth/stores/auth.store';
-import { useUsers } from '@/features/admin/hooks/useUsers';
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import { useUsers } from "@/features/admin/hooks/useUsers";
 import {
   ShieldCheck,
   Users,
@@ -9,7 +9,7 @@ import {
   Stethoscope,
   FileText,
   Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 
 const SUPER_ADMIN_AdminOverview = () => {
   const { user: currentUser } = useAuthStore();
@@ -17,9 +17,9 @@ const SUPER_ADMIN_AdminOverview = () => {
 
   const metrics = {
     totalStaff: users.length,
-    activeUsers: users.filter(u => u.status === 'ACTIVE').length,
-    suspendedUsers: users.filter(u => u.status === 'SUSPENDED').length,
-    pendingActivation: users.filter(u => u.status === 'PENDING').length,
+    activeUsers: users.filter((u) => u.status === "ACTIVE").length,
+    suspendedUsers: users.filter((u) => u.status === "SUSPENDED").length,
+    pendingActivation: users.filter((u) => u.status === "PENDING").length,
   };
 
   const queueMetrics = {
@@ -36,48 +36,111 @@ const SUPER_ADMIN_AdminOverview = () => {
   };
 
   const recentAuditLogs = [
-    { id: '1', action: 'LOGIN_SUCCESS', actor: 'Sarah Johnson', target: 'User Session', time: '2 min ago' },
-    { id: '2', action: 'USER_CREATED', actor: 'Demo Admin', target: 'Brenda King', time: '15 min ago' },
-    { id: '3', action: 'VITALS_RECORDED', actor: 'Brenda King', target: 'Visit V-1042', time: '22 min ago' },
-    { id: '4', action: 'PASSWORD_CHANGE_SUCCESS', actor: 'Leo Spaceman', target: 'User Account', time: '1 hr ago' },
-    { id: '5', action: 'USER_SUSPENDED', actor: 'Demo Admin', target: 'Leo Spaceman', time: '1 hr ago' },
+    {
+      id: "1",
+      action: "LOGIN_SUCCESS",
+      actor: "Sarah Johnson",
+      target: "User Session",
+      time: "2 min ago",
+    },
+    {
+      id: "2",
+      action: "USER_CREATED",
+      actor: "Demo Admin",
+      target: "Brenda King",
+      time: "15 min ago",
+    },
+    {
+      id: "3",
+      action: "VITALS_RECORDED",
+      actor: "Brenda King",
+      target: "Visit V-1042",
+      time: "22 min ago",
+    },
+    {
+      id: "4",
+      action: "PASSWORD_CHANGE_SUCCESS",
+      actor: "Leo Spaceman",
+      target: "User Account",
+      time: "1 hr ago",
+    },
+    {
+      id: "5",
+      action: "USER_SUSPENDED",
+      actor: "Demo Admin",
+      target: "Leo Spaceman",
+      time: "1 hr ago",
+    },
   ];
 
   const getActionColor = (action: string) => {
-    if (action.includes('CREATED') || action.includes('SUCCESS') || action.includes('ACTIVATED'))
-      return 'border-green-500/40 text-green-400';
-    if (action.includes('SUSPENDED') || action.includes('FAILURE'))
-      return 'border-red-500/40 text-red-400';
-    return 'border-clinical-blue/40 text-clinical-blue';
+    if (
+      action.includes("CREATED") ||
+      action.includes("SUCCESS") ||
+      action.includes("ACTIVATED")
+    )
+      return "border-green-500/40 text-green-400";
+    if (action.includes("SUSPENDED") || action.includes("FAILURE"))
+      return "border-red-500/40 text-red-400";
+    return "border-clinical-blue/40 text-clinical-blue";
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <p className="mono-label text-clinical-blue mb-1 uppercase">Administrative Command Center</p>
+          <p className="mono-label text-clinical-blue mb-1 uppercase">
+            Administrative Command Center
+          </p>
           <h1 className="text-3xl font-bold text-white tracking-tighter">
             Welcome, {currentUser?.firstName}
           </h1>
         </div>
-        {isLoading && <Loader2 className="animate-spin text-clinical-blue mb-2" size={20} />}
+        {isLoading && (
+          <Loader2 className="animate-spin text-clinical-blue mb-2" size={20} />
+        )}
       </div>
 
       {/* Staff Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'TOTAL STAFF', value: metrics.totalStaff, icon: Users, color: 'text-clinical-blue' },
-          { label: 'ACTIVE USERS', value: metrics.activeUsers, icon: ShieldCheck, color: 'text-green-400' },
-          { label: 'SUSPENDED', value: metrics.suspendedUsers, icon: UserMinus, color: 'text-red-400' },
-          { label: 'PENDING ACTIVATION', value: metrics.pendingActivation, icon: AlertCircle, color: 'text-yellow-400' },
+          {
+            label: "TOTAL STAFF",
+            value: metrics.totalStaff,
+            icon: Users,
+            color: "text-clinical-blue",
+          },
+          {
+            label: "ACTIVE USERS",
+            value: metrics.activeUsers,
+            icon: ShieldCheck,
+            color: "text-green-400",
+          },
+          {
+            label: "SUSPENDED",
+            value: metrics.suspendedUsers,
+            icon: UserMinus,
+            color: "text-red-400",
+          },
+          {
+            label: "PENDING ACTIVATION",
+            value: metrics.pendingActivation,
+            icon: AlertCircle,
+            color: "text-yellow-400",
+          },
         ].map((stat) => (
-          <div key={stat.label} className="bg-surface-container-low p-6 space-y-2 border-none">
+          <div
+            key={stat.label}
+            className="bg-surface-container-low p-6 space-y-2 border-none"
+          >
             <div className="flex items-center gap-2">
               <stat.icon size={14} className={stat.color} />
-              <span className="mono-label text-on-surface-variant">{stat.label}</span>
+              <span className="mono-label text-on-surface-variant">
+                {stat.label}
+              </span>
             </div>
             <p className="text-4xl font-bold text-white data-value">
-              {isLoading ? '...' : stat.value}
+              {isLoading ? "..." : stat.value}
             </p>
           </div>
         ))}
@@ -92,14 +155,41 @@ const SUPER_ADMIN_AdminOverview = () => {
           </h2>
           <div className="space-y-3">
             {[
-              { label: 'Waiting for Vitals', value: queueMetrics.waitingForVitals, status: 'WAITING_FOR_VITALS', color: 'text-yellow-400' },
-              { label: 'Ready for Doctor', value: queueMetrics.readyForDoctor, status: 'READY_FOR_DOCTOR', color: 'text-clinical-blue' },
-              { label: 'In Progress', value: queueMetrics.inProgress, status: 'IN_PROGRESS', color: 'text-orange-400' },
-              { label: 'Completed', value: queueMetrics.done, status: 'DONE', color: 'text-green-400' },
+              {
+                label: "Waiting for Vitals",
+                value: queueMetrics.waitingForVitals,
+                status: "WAITING_FOR_VITALS",
+                color: "text-yellow-400",
+              },
+              {
+                label: "Ready for Doctor",
+                value: queueMetrics.readyForDoctor,
+                status: "READY_FOR_DOCTOR",
+                color: "text-clinical-blue",
+              },
+              {
+                label: "In Progress",
+                value: queueMetrics.inProgress,
+                status: "IN_PROGRESS",
+                color: "text-orange-400",
+              },
+              {
+                label: "Completed",
+                value: queueMetrics.done,
+                status: "DONE",
+                color: "text-green-400",
+              },
             ].map((q) => (
-              <div key={q.status} className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-clinical-blue/30 transition-colors cursor-pointer group">
-                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">{q.label}</span>
-                <span className={`data-value font-bold ${q.color}`}>{q.value}</span>
+              <div
+                key={q.status}
+                className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-clinical-blue/30 transition-colors cursor-pointer group"
+              >
+                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">
+                  {q.label}
+                </span>
+                <span className={`data-value font-bold ${q.color}`}>
+                  {q.value}
+                </span>
               </div>
             ))}
           </div>
@@ -113,13 +203,32 @@ const SUPER_ADMIN_AdminOverview = () => {
           </h2>
           <div className="space-y-3">
             {[
-              { label: 'Created', value: visitMetrics.created, color: 'text-yellow-400' },
-              { label: 'In Progress', value: visitMetrics.inProgress, color: 'text-clinical-blue' },
-              { label: 'Completed', value: visitMetrics.completed, color: 'text-green-400' },
+              {
+                label: "Created",
+                value: visitMetrics.created,
+                color: "text-yellow-400",
+              },
+              {
+                label: "In Progress",
+                value: visitMetrics.inProgress,
+                color: "text-clinical-blue",
+              },
+              {
+                label: "Completed",
+                value: visitMetrics.completed,
+                color: "text-green-400",
+              },
             ].map((v) => (
-              <div key={v.label} className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-green-500/30 transition-colors cursor-pointer group">
-                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">{v.label}</span>
-                <span className={`data-value font-bold ${v.color}`}>{v.value}</span>
+              <div
+                key={v.label}
+                className="flex items-center justify-between p-3 bg-background/50 border border-white/5 hover:border-green-500/30 transition-colors cursor-pointer group"
+              >
+                <span className="text-xs text-on-surface-variant uppercase tracking-wider group-hover:text-white">
+                  {v.label}
+                </span>
+                <span className={`data-value font-bold ${v.color}`}>
+                  {v.value}
+                </span>
               </div>
             ))}
           </div>
@@ -134,16 +243,27 @@ const SUPER_ADMIN_AdminOverview = () => {
         </h2>
         <div className="space-y-2">
           {recentAuditLogs.map((log) => (
-            <div key={log.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0 group hover:bg-surface-bright/5 transition-all px-2">
+            <div
+              key={log.id}
+              className="flex items-center justify-between py-2 border-b border-white/5 last:border-0 group hover:bg-surface-bright/5 transition-all px-2"
+            >
               <div className="flex items-center gap-4">
-                <span className={`text-[9px] font-bold px-2 py-0.5 border ${getActionColor(log.action)}`}>
+                <span
+                  className={`text-[9px] font-bold px-2 py-0.5 border ${getActionColor(log.action)}`}
+                >
                   {log.action}
                 </span>
-                <span className="text-sm text-white font-medium">{log.actor}</span>
+                <span className="text-sm text-white font-medium">
+                  {log.actor}
+                </span>
                 <span className="text-xs text-on-surface-variant">→</span>
-                <span className="text-xs text-on-surface-variant">{log.target}</span>
+                <span className="text-xs text-on-surface-variant">
+                  {log.target}
+                </span>
               </div>
-              <span className="data-value text-[10px] text-on-surface-variant">{log.time}</span>
+              <span className="data-value text-[10px] text-on-surface-variant">
+                {log.time}
+              </span>
             </div>
           ))}
         </div>

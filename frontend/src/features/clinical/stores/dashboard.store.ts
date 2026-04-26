@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type Role = 'ADMIN' | 'DOCTOR' | 'NURSE';
+export type Role = "ADMIN" | "DOCTOR" | "NURSE";
 
 interface DashboardState {
   role: Role;
@@ -10,11 +10,12 @@ interface DashboardState {
 }
 
 export const useDashboardStore = create<DashboardState>((set) => ({
-  role: 'ADMIN', 
-  activeTab: 'overview',
-  setRole: (role) => set({ 
-    role, 
-    activeTab: 'overview' // Reset tab on role change
-  }),
+  role: "ADMIN",
+  activeTab: "overview",
+  setRole: (role) =>
+    set({
+      role,
+      activeTab: "overview", // Reset tab on role change
+    }),
   setActiveTab: (tab) => set({ activeTab: tab }),
 }));

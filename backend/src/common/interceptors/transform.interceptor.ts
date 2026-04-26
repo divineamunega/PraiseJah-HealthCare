@@ -15,8 +15,10 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, Response<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  Response<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -28,7 +30,8 @@ export class TransformInterceptor<T>
     return next.handle().pipe(
       map((data) => {
         const hasDataField = data && typeof data === 'object' && 'data' in data;
-        const hasMessageField = data && typeof data === 'object' && 'message' in data;
+        const hasMessageField =
+          data && typeof data === 'object' && 'message' in data;
         const hasMetaField = data && typeof data === 'object' && 'meta' in data;
 
         const message = data?.message || 'Request successful';
@@ -41,7 +44,11 @@ export class TransformInterceptor<T>
 
         // If the original data only contained a message, we should probably return null for data
         // to avoid { message: "...", data: { message: "..." } }
-        if (hasMessageField && !hasDataField && Object.keys(data).length === 1) {
+        if (
+          hasMessageField &&
+          !hasDataField &&
+          Object.keys(data).length === 1
+        ) {
           resultData = null;
         }
 

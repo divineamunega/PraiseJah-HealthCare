@@ -1,27 +1,29 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router';
-import { useAuthStore } from '../stores/auth.store';
+import React from "react";
+import { Navigate, useLocation } from "react-router";
+import { useAuthStore } from "../stores/auth.store";
 
 type Role = string;
 
 export const ROLE_HOME: Record<string, string> = {
-  SUPER_ADMIN: '/admin',
-  ADMIN: '/admin',
-  DOCTOR: '/doctor',
-  NURSE: '/nurse',
-  SECRETARY: '/secretary',
+  SUPER_ADMIN: "/admin",
+  ADMIN: "/admin",
+  DOCTOR: "/doctor",
+  NURSE: "/nurse",
+  SECRETARY: "/secretary",
+  LAB_SCIENTIST: "/lab",
 };
 
 export function getRoleHome(role: Role): string {
-  return ROLE_HOME[role] || '/admin';
+  return ROLE_HOME[role] || "/admin";
 }
 
 const ROLE_ACCESS: Record<string, string[]> = {
-  SUPER_ADMIN: ['/admin', '/doctor', '/nurse', '/secretary'],
-  ADMIN: ['/admin', '/doctor', '/nurse', '/secretary'],
-  DOCTOR: ['/doctor'],
-  NURSE: ['/nurse'],
-  SECRETARY: ['/secretary'],
+  SUPER_ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab"],
+  ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab"],
+  DOCTOR: ["/doctor"],
+  NURSE: ["/nurse"],
+  SECRETARY: ["/secretary"],
+  LAB_SCIENTIST: ["/lab"],
 };
 
 export function canAccess(role: Role, path: string): boolean {
@@ -29,7 +31,11 @@ export function canAccess(role: Role, path: string): boolean {
   return allowed.some((prefix) => path.startsWith(prefix));
 }
 
-const SUPER_ADMIN_ONLY_PATHS = ['/admin/settings', '/admin/database', '/admin/permissions'];
+const SUPER_ADMIN_ONLY_PATHS = [
+  "/admin/settings",
+  "/admin/database",
+  "/admin/permissions",
+];
 
 export function isSuperAdminOnly(path: string): boolean {
   return SUPER_ADMIN_ONLY_PATHS.some((prefix) => path.startsWith(prefix));
@@ -55,19 +61,25 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Redirect PENDING users to change-password if they aren't already there
-  if (user?.status === 'PENDING' && location.pathname !== '/change-password') {
+  if (user?.status === "PENDING" && location.pathname !== "/change-password") {
     return <Navigate to="/change-password" replace />;
   }
 
   // Prevent ACTIVE users from going to change-password
-  if (user?.status === 'ACTIVE' && location.pathname === '/change-password') {
+  if (user?.status === "ACTIVE" && location.pathname === "/change-password") {
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
 
   return <>{children}</>;
 };
 
-export const RoleGuard = ({ path, children }: { path: string; children: React.ReactNode }) => {
+export const RoleGuard = ({
+  path,
+  children,
+}: {
+  path: string;
+  children: React.ReactNode;
+}) => {
   const { user, isLoading } = useAuthStore();
 
   if (isLoading) {
@@ -76,13 +88,15 @@ export const RoleGuard = ({ path, children }: { path: string; children: React.Re
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (user.status === 'PENDING') return <Navigate to="/change-password" replace />;
+  if (user.status === "PENDING")
+    return <Navigate to="/change-password" replace />;
 
-  if (isSuperAdminOnly(path) && user.role !== 'SUPER_ADMIN') {
+  if (isSuperAdminOnly(path) && user.role !== "SUPER_ADMIN") {
     return <Navigate to="/admin" replace />;
   }
 
-  if (!canAccess(user.role, path)) return <Navigate to={getRoleHome(user.role)} replace />;
+  if (!canAccess(user.role, path))
+    return <Navigate to={getRoleHome(user.role)} replace />;
   return <>{children}</>;
 };
 
@@ -94,7 +108,8 @@ export const GuestGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (isAuthenticated && user) {
-    if (user.status === 'PENDING') return <Navigate to="/change-password" replace />;
+    if (user.status === "PENDING")
+      return <Navigate to="/change-password" replace />;
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
   return <>{children}</>;

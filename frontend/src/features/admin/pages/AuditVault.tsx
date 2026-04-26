@@ -1,5 +1,5 @@
-import { Terminal } from 'lucide-react';
-import { useAdminStore } from '@/features/admin/stores/admin.store';
+import { Terminal } from "lucide-react";
+import { useAdminStore } from "@/features/admin/stores/admin.store";
 
 const AuditVault = () => {
   const { logs } = useAdminStore();
@@ -20,29 +20,48 @@ const AuditVault = () => {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/5 bg-surface-container-low/50">
-              <th className="px-6 py-3 mono-label text-on-surface-variant">TIMESTAMP</th>
-              <th className="px-6 py-3 mono-label text-on-surface-variant">ACTOR</th>
-              <th className="px-6 py-3 mono-label text-on-surface-variant">ACTION</th>
-              <th className="px-6 py-3 mono-label text-on-surface-variant">TARGET</th>
+              <th className="px-6 py-3 mono-label text-on-surface-variant">
+                TIMESTAMP
+              </th>
+              <th className="px-6 py-3 mono-label text-on-surface-variant">
+                ACTOR
+              </th>
+              <th className="px-6 py-3 mono-label text-on-surface-variant">
+                ACTION
+              </th>
+              <th className="px-6 py-3 mono-label text-on-surface-variant">
+                TARGET
+              </th>
             </tr>
           </thead>
           <tbody>
             {logs.map((log) => (
-              <tr key={log.id} className="border-b border-white/5 hover:bg-surface-bright/5 transition-colors group">
+              <tr
+                key={log.id}
+                className="border-b border-white/5 hover:bg-surface-bright/5 transition-colors group"
+              >
                 <td className="px-6 py-4 data-value text-[11px] text-on-surface-variant">
                   {new Date(log.timestamp).toLocaleString()}
                 </td>
-                <td className="px-6 py-4 text-sm font-medium text-white">{log.actor}</td>
+                <td className="px-6 py-4 text-sm font-medium text-white">
+                  {log.actor}
+                </td>
                 <td className="px-6 py-4">
-                  <span className={`text-[9px] font-bold px-2 py-0.5 border ${
-                    log.action === 'USER_CREATED' ? 'border-clinical-blue/40 text-clinical-blue' :
-                    log.action === 'USER_SUSPENDED' ? 'border-red-500/40 text-red-400' :
-                    'border-green-500/40 text-green-400'
-                  }`}>
+                  <span
+                    className={`text-[9px] font-bold px-2 py-0.5 border ${
+                      log.action === "USER_CREATED"
+                        ? "border-clinical-blue/40 text-clinical-blue"
+                        : log.action === "USER_SUSPENDED"
+                          ? "border-red-500/40 text-red-400"
+                          : "border-green-500/40 text-green-400"
+                    }`}
+                  >
                     {log.action}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-on-surface-variant font-medium">{log.target}</td>
+                <td className="px-6 py-4 text-sm text-on-surface-variant font-medium">
+                  {log.target}
+                </td>
               </tr>
             ))}
           </tbody>

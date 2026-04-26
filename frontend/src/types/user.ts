@@ -1,5 +1,11 @@
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'NURSE' | 'SECRETARY';
-export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+export type UserRole =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "DOCTOR"
+  | "NURSE"
+  | "SECRETARY"
+  | "LAB_SCIENTIST";
+export type UserStatus = "ACTIVE" | "SUSPENDED" | "PENDING";
 
 export interface User {
   id: string;

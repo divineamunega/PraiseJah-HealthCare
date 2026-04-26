@@ -1,9 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Patient, User, AuditTargetType, AuditAction, Prisma } from '@prisma/client';
+import {
+  Patient,
+  User,
+  AuditTargetType,
+  AuditAction,
+  Prisma,
+} from '@prisma/client';
 import { CreatePatientDto } from './dto/create-patient.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
@@ -28,7 +31,7 @@ export class PatientsService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   async create(dto: CreatePatientDto): Promise<Partial<Patient>> {
     return this.prisma.patient.create({
@@ -46,11 +49,11 @@ export class PatientsService {
       AND: [
         name
           ? {
-            OR: [
-              { firstName: { contains: name, mode: 'insensitive' } },
-              { lastName: { contains: name, mode: 'insensitive' } },
-            ],
-          }
+              OR: [
+                { firstName: { contains: name, mode: 'insensitive' } },
+                { lastName: { contains: name, mode: 'insensitive' } },
+              ],
+            }
           : {},
         phone ? { phone: { contains: phone } } : {},
         sex ? { sex } : {},
@@ -91,7 +94,11 @@ export class PatientsService {
     return patient;
   }
 
-  async update(id: string, dto: UpdatePatientDto, actor: User): Promise<Partial<Patient>> {
+  async update(
+    id: string,
+    dto: UpdatePatientDto,
+    actor: User,
+  ): Promise<Partial<Patient>> {
     // We fetch the full object (including internal fields) for the audit log before updating
     const existingPatient = await this.prisma.patient.findFirst({
       where: { id, deletedAt: null },
@@ -107,16 +114,22 @@ export class PatientsService {
       select: this.patientSelect,
     });
 
-    await this.auditService.createLog({
-      actorId: actor.id,
-      action: AuditAction.PATIENT_UPDATED,
-      targetType: AuditTargetType.PATIENT,
-      targetId: id,
-      metadata: {
-        oldValue: JSON.parse(JSON.stringify(existingPatient)),
-        newValue: JSON.parse(JSON.stringify(updatedPatient)),
-      },
-    }).catch(err => this.logger.error(`Failed to create detailed audit log: ${err.message}`));
+    await this.auditService
+      .createLog({
+        actorId: actor.id,
+        action: AuditAction.PATIENT_UPDATED,
+        targetType: AuditTargetType.PATIENT,
+        targetId: id,
+        metadata: {
+          oldValue: JSON.parse(JSON.stringify(existingPatient)),
+          newValue: JSON.parse(JSON.stringify(updatedPatient)),
+        },
+      })
+      .catch((err) =>
+        this.logger.error(
+          `Failed to create detailed audit log: ${err.message}`,
+        ),
+      );
 
     return updatedPatient;
   }
@@ -124,7 +137,7 @@ export class PatientsService {
   async remove(id: string): Promise<void> {
     const patient = await this.prisma.patient.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!patient) {

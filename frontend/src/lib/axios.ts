@@ -1,11 +1,14 @@
-import axios from 'axios';
-import { getAccessToken, setAccessToken } from '@/features/auth/utils/token.util';
+import axios from "axios";
+import {
+  getAccessToken,
+  setAccessToken,
+} from "@/features/auth/utils/token.util";
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: "/api",
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -22,7 +25,7 @@ let refreshPromise: Promise<any> | null = null;
 api.interceptors.response.use(
   (response) => {
     const data = response.data;
-    if (data && typeof data === 'object' && 'success' in data) {
+    if (data && typeof data === "object" && "success" in data) {
       if (data.success) {
         response.data = data.data ?? { message: data.message };
       }
@@ -35,14 +38,14 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes('/auth/login') &&
-      !originalRequest.url?.includes('/auth/refresh')
+      !originalRequest.url?.includes("/auth/login") &&
+      !originalRequest.url?.includes("/auth/refresh")
     ) {
       originalRequest._retry = true;
 
       if (!refreshPromise) {
         refreshPromise = axios
-          .post('/api/auth/refresh', null, { withCredentials: true })
+          .post("/api/auth/refresh", null, { withCredentials: true })
           .then((res) => {
             const data = res.data?.data ?? res.data;
             setAccessToken(data.accessToken);
@@ -66,13 +69,15 @@ api.interceptors.response.use(
         }
       } catch {
         setAccessToken(null);
-        window.location.href = '/login';
-        return Promise.reject(new Error('Session expired. Please log in again.'));
+        window.location.href = "/login";
+        return Promise.reject(
+          new Error("Session expired. Please log in again."),
+        );
       }
     }
 
     const message =
-      error.response?.data?.message || 'An unexpected error occurred';
+      error.response?.data?.message || "An unexpected error occurred";
     return Promise.reject(new Error(message));
   },
 );

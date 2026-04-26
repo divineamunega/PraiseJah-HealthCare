@@ -12,7 +12,7 @@ const { JsonWebTokenError, TokenExpiredError } = jwt;
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(private readonly logger: LoggerService) {
-    super()
+    super();
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
@@ -21,13 +21,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (info instanceof TokenExpiredError) {
         throw new UnauthorizedException('Token has expired');
       } else if (info instanceof JsonWebTokenError) {
-
         throw new UnauthorizedException('Invalid token signature');
       } else if (info?.message === 'No auth token') {
         throw new UnauthorizedException('Authorization token is missing');
       }
 
-      throw new UnauthorizedException(err?.message || info?.message || 'Authentication failed');
+      throw new UnauthorizedException(
+        err?.message || info?.message || 'Authentication failed',
+      );
     }
     return user;
   }

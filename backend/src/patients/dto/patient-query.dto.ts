@@ -19,12 +19,18 @@ export enum Sex {
 }
 
 export class PatientQueryDto extends PaginationDto {
-  @ApiPropertyOptional({ example: 'John', description: 'Search by first or last name' })
+  @ApiPropertyOptional({
+    example: 'John',
+    description: 'Search by first or last name',
+  })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: '+2348012345678', description: 'Search by phone number' })
+  @ApiPropertyOptional({
+    example: '+2348012345678',
+    description: 'Search by phone number',
+  })
   @IsOptional()
   @IsString()
   phone?: string;
@@ -34,7 +40,10 @@ export class PatientQueryDto extends PaginationDto {
   @IsEnum(Sex)
   sex?: Sex;
 
-  @ApiPropertyOptional({ enum: PatientSortBy, default: PatientSortBy.CREATED_AT })
+  @ApiPropertyOptional({
+    enum: PatientSortBy,
+    default: PatientSortBy.CREATED_AT,
+  })
   @IsEnum(PatientSortBy)
   @IsOptional()
   sortBy: PatientSortBy = PatientSortBy.CREATED_AT;

@@ -17,7 +17,6 @@ import { WelcomeMailService } from '../mail/welcome-mail.service.js';
 import { LoggerService } from '../logger/logger.service.js';
 import { AuditService } from '../audit/audit.service.js';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -25,7 +24,7 @@ export class UsersService {
     private readonly welcomeMailService: WelcomeMailService,
     private readonly logger: LoggerService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   async create(dto: CreateUserDto, creator: User) {
     // 1. Making sure only allowed users can create users
@@ -74,12 +73,13 @@ export class UsersService {
   async findUniqueByEmail(email: string) {
     try {
       const user = await this.prisma.user.findUniqueOrThrow({
-        where: { email, status: { not: "SUSPENDED" }, deletedAt: null },
+        where: { email, status: { not: 'SUSPENDED' }, deletedAt: null },
       });
       return user;
     } catch (err: any) {
-      if (err.code === 'P2025') throw new UnauthorizedException("Incorrect email or password");
-      this.logger.error(err)
+      if (err.code === 'P2025')
+        throw new UnauthorizedException('Incorrect email or password');
+      this.logger.error(err);
       throw new InternalServerErrorException();
     }
   }

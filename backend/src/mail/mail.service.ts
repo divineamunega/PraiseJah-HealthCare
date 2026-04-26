@@ -9,7 +9,7 @@ export class MailService {
     private readonly resend: Resend,
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
-  ) { }
+  ) {}
 
   async sendWelcomeEmail(name: string, email: string, tempPassword: string) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
@@ -36,7 +36,11 @@ export class MailService {
     }
   }
 
-  async sendPasswordResetEmail(name: string, email: string, resetToken: string) {
+  async sendPasswordResetEmail(
+    name: string,
+    email: string,
+    resetToken: string,
+  ) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
 

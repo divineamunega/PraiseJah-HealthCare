@@ -1,17 +1,13 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import {
-  Activity,
   Clock,
-  CheckCircle2,
   Stethoscope,
   ClipboardList,
   RefreshCw,
   Search,
   Zap,
   ArrowRight,
-  Thermometer,
-  User,
   Loader2,
 } from "lucide-react";
 import { useVisits } from "../hooks/useVisits";

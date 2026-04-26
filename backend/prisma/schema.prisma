@@ -20,6 +20,7 @@ enum Role {
   DOCTOR
   NURSE
   SECRETARY
+  LAB_SCIENTIST
 }
 
 enum ActiveStatus {
@@ -95,6 +96,7 @@ enum AuditAction {
   DIAGNOSIS_ADDED
   PRESCRIPTION_ISSUED
   LAB_ORDER_CREATED
+  LAB_ORDER_COMPLETED
 }
 
 // ============================================================

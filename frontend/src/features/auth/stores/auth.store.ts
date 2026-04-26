@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import type { AuthUser } from '../api/auth.api';
+import { create } from "zustand";
+import type { AuthUser } from "../api/auth.api";
 
 interface AuthState {
   isAuthenticated: boolean;

@@ -1,6 +1,6 @@
-import api from '@/lib/axios';
+import api from "@/lib/axios";
 
-export type Sex = 'MALE' | 'FEMALE' | 'OTHER';
+export type Sex = "MALE" | "FEMALE" | "OTHER";
 
 export interface Patient {
   id: string;
@@ -30,7 +30,7 @@ export interface PatientQuery {
   phone?: string;
   sex?: Sex;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface PaginatedResponse<T> {
@@ -44,12 +44,14 @@ export interface PaginatedResponse<T> {
 
 export const patientsApi = {
   create: async (data: CreatePatientRequest) => {
-    const res = await api.post<Patient>('/patients', data);
+    const res = await api.post<Patient>("/patients", data);
     return res.data;
   },
 
   findAll: async (query?: PatientQuery) => {
-    const res = await api.get<PaginatedResponse<Patient>>('/patients', { params: query });
+    const res = await api.get<PaginatedResponse<Patient>>("/patients", {
+      params: query,
+    });
     return res.data;
   },
 
