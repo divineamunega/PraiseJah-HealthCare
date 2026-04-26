@@ -9,24 +9,30 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { LoggerService } from './logger/logger.service.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
-  
+
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
-  app.useGlobalPipes(new ValidationPipe({ 
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   app.use(cookieParser());
   app.useGlobalInterceptors(
     new DevDelayInterceptor(),
-    new LoggingInterceptor(logger), 
-    new TransformInterceptor()
+    new LoggingInterceptor(logger),
+    new TransformInterceptor(),
   );
   app.useGlobalFilters(new AllExceptionsFilter(logger));
 
@@ -38,7 +44,7 @@ async function bootstrap() {
     .addBearerAuth()
     .addCookieAuth('refresh_token')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 

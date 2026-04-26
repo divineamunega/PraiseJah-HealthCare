@@ -6,7 +6,7 @@ export interface ClinicalNote {
   authorId: string;
   chiefComplaint?: string;
   content: string;
-  version: number;
+  version: string;
   createdAt: string;
   updatedAt: string;
   author?: {
@@ -19,7 +19,7 @@ export interface CreateNoteRequest {
   visitId: string;
   chiefComplaint?: string;
   content: string;
-  version?: number;
+  version?: string;
 }
 
 export const notesApi = {

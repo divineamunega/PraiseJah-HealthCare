@@ -59,7 +59,7 @@ export function useAutosaveSOAP({
   });
 
   // Refs to track mutable state without causing re-renders
-  const versionRef = useRef<number>(0);
+  const versionRef = useRef<string>('0');
   const noteIdRef = useRef<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -208,7 +208,7 @@ export function useAutosaveSOAP({
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    versionRef.current = 0;
+    versionRef.current = '0';
     noteIdRef.current = null;
     retryCountRef.current = 0;
     setState({
