@@ -45,6 +45,9 @@ export const useClinicalSocket = () => {
         queryClient.invalidateQueries({
           queryKey: ["visits", "detail", data.visitId],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["labs", "visit", data.visitId],
+        });
       });
 
       socket.on("lab_results_ready", (data) => {

@@ -59,7 +59,10 @@ const Doctor_Dashboard = () => {
 
   const handleStartEncounter = async (visitId: string) => {
     try {
-      await api.patch(`/visits/${visitId}`, { status: "IN_PROGRESS" });
+      await api.patch(`/visits/${visitId}`, {
+        status: "IN_PROGRESS",
+        doctorId: user?.id,
+      });
       queryClient.invalidateQueries({ queryKey: ["visits"] });
       navigate(`/doctor/encounter/${visitId}`);
     } catch (err: any) {
