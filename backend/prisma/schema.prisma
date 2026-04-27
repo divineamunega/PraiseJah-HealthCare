@@ -21,6 +21,7 @@ enum Role {
   NURSE
   SECRETARY
   LAB_SCIENTIST
+  PHARMACIST
 }
 
 enum ActiveStatus {

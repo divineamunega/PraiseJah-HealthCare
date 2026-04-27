@@ -44,6 +44,12 @@ async function main() {
       role: Role.LAB_SCIENTIST,
     },
     {
+      email: 'pharmacy@demo.com',
+      firstName: 'George',
+      lastName: 'Pharmacist',
+      role: Role.PHARMACIST,
+    },
+    {
       email: 'secretary@demo.com',
       firstName: 'Pam',
       lastName: 'Beesly',

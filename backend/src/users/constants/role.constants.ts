@@ -7,10 +7,18 @@ export const RoleCreationMap: Record<Role, Role[]> = {
     Role.NURSE,
     Role.DOCTOR,
     Role.LAB_SCIENTIST,
+    Role.PHARMACIST,
   ],
-  ADMIN: [Role.SECRETARY, Role.NURSE, Role.DOCTOR, Role.LAB_SCIENTIST],
+  ADMIN: [
+    Role.SECRETARY, 
+    Role.NURSE, 
+    Role.DOCTOR, 
+    Role.LAB_SCIENTIST, 
+    Role.PHARMACIST
+  ],
   DOCTOR: [Role.NURSE],
   NURSE: [],
   SECRETARY: [],
   LAB_SCIENTIST: [],
+  PHARMACIST: [],
 };
