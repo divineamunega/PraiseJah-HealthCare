@@ -20,7 +20,11 @@ import {
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
-import { useLabs, useCreateLabOrder } from "../hooks/useLabs";
+import {
+  useLabs,
+  useCreateLabOrder,
+  useCreateBulkLabOrders,
+} from "../hooks/useLabs";
 import {
   usePrescriptions,
   useCreatePrescription,
@@ -54,6 +58,14 @@ const formatLastSaved = (date: Date | null): string => {
   return date.toLocaleTimeString();
 };
 
+const PREDEFINED_TESTS = [
+  "Full Blood Count (FBC)",
+  "Malaria Parasite (MP)",
+  "Urinalysis",
+  "Blood Glucose",
+  "Widal Test",
+];
+
 const EncounterWorkstation = () => {
   const { visitId } = useParams();
   const navigate = useNavigate();
@@ -68,6 +80,7 @@ const EncounterWorkstation = () => {
     "DOCUMENTATION" | "LAB_ORDERS" | "E_PRESCRIPTION"
   >("DOCUMENTATION");
   const [testName, setTestName] = useState("");
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
 
   const [prescriptionForm, setPrescriptionForm] = useState({
     medication: "",
@@ -80,6 +93,7 @@ const EncounterWorkstation = () => {
   const { data: prescriptions, isLoading: isLoadingPrescriptions } =
     usePrescriptions(visitId!);
   const createLabOrder = useCreateLabOrder();
+  const createBulkLabOrders = useCreateBulkLabOrders();
   const createPrescription = useCreatePrescription();
 
   // SOAP Note State
@@ -188,6 +202,25 @@ const EncounterWorkstation = () => {
       visitId,
       testName: testName.trim(),
     });
+    setTestName("");
+  };
+
+  const handleBulkRequest = async () => {
+    if (!visitId) return;
+
+    const allTests = [...selectedTests];
+    if (testName.trim() && !allTests.includes(testName.trim())) {
+      allTests.push(testName.trim());
+    }
+
+    if (allTests.length === 0) return;
+
+    await createBulkLabOrders.mutateAsync({
+      visitId,
+      testNames: allTests,
+    });
+
+    setSelectedTests([]);
     setTestName("");
   };
 
@@ -540,32 +573,82 @@ const EncounterWorkstation = () => {
                         New Lab Order
                       </h4>
                       <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
-                        Request diagnostic investigations for this patient
+                        Select from common tests or enter a custom requirement
                       </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 bg-surface-container-low/50 p-6 border border-white/5 rounded-sm">
+                      {PREDEFINED_TESTS.map((test) => (
+                        <label
+                          key={test}
+                          className="flex items-center gap-3 cursor-pointer group"
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={selectedTests.includes(test)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTests([...selectedTests, test]);
+                              } else {
+                                setSelectedTests(
+                                  selectedTests.filter((t) => t !== test),
+                                );
+                              }
+                            }}
+                          />
+                          <div
+                            className={`w-5 h-5 border flex items-center justify-center transition-all ${
+                              selectedTests.includes(test)
+                                ? "bg-clinical-blue border-clinical-blue"
+                                : "border-white/10 group-hover:border-clinical-blue/50"
+                            }`}
+                          >
+                            {selectedTests.includes(test) && (
+                              <CheckCircle2
+                                size={12}
+                                className="text-background"
+                              />
+                            )}
+                          </div>
+                          <span
+                            className={`text-[11px] font-bold uppercase tracking-tight transition-all ${
+                              selectedTests.includes(test)
+                                ? "text-white"
+                                : "text-on-surface-variant"
+                            }`}
+                          >
+                            {test}
+                          </span>
+                        </label>
+                      ))}
                     </div>
 
                     <div className="flex gap-4">
                       <input
                         type="text"
-                        placeholder="Enter test name (e.g. Full Blood Count, Malaria Parasite...)"
+                        placeholder="Enter custom test name..."
                         className="flex-1 bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
                         value={testName}
                         onChange={(e) => setTestName(e.target.value)}
                         onKeyDown={(e) =>
-                          e.key === "Enter" && handleRequestLab()
+                          e.key === "Enter" && handleBulkRequest()
                         }
                       />
                       <button
-                        onClick={handleRequestLab}
-                        disabled={createLabOrder.isPending || !testName.trim()}
+                        onClick={handleBulkRequest}
+                        disabled={
+                          createBulkLabOrders.isPending ||
+                          (selectedTests.length === 0 && !testName.trim())
+                        }
                         className="bg-clinical-blue px-6 py-4 text-[10px] font-bold text-background hover:bg-clinical-blue/90 transition-all flex items-center gap-3 shadow-lg shadow-clinical-blue/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {createLabOrder.isPending ? (
+                        {createBulkLabOrders.isPending ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
                           <Plus size={16} />
                         )}
-                        Request Lab Order
+                        Submit All Requests
                       </button>
                     </div>
                   </section>

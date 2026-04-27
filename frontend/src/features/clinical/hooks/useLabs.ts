@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { labsApi, type CreateLabOrderRequest } from "../api/labs.api";
+import {
+  labsApi,
+  type CreateLabOrderRequest,
+  type CreateBulkLabOrdersRequest,
+} from "../api/labs.api";
 import { VISIT_KEYS } from "./useVisits";
 import { toast } from "sonner";
 
@@ -33,6 +37,28 @@ export function useCreateLabOrder() {
     onError: (error: any) => {
       toast.error(
         error.response?.data?.message || "Failed to request lab order",
+      );
+    },
+  });
+}
+
+export function useCreateBulkLabOrders() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateBulkLabOrdersRequest) => labsApi.createBulk(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: LAB_KEYS.byVisit(variables.visitId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: VISIT_KEYS.detail(variables.visitId),
+      });
+      toast.success("Lab orders requested successfully");
+    },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.message || "Failed to request lab orders",
       );
     },
   });

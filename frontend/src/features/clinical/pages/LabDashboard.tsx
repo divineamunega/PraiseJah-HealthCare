@@ -30,22 +30,24 @@ const LabOrderList = ({ visitId }: { visitId: string }) => {
     return <div className="animate-pulse h-4 bg-white/5 w-32 rounded" />;
 
   return (
-    <ul className="space-y-1">
+    <div className="flex flex-wrap gap-2">
       {labs?.map((order) => (
-        <li
+        <div
           key={order.id}
-          className="text-sm text-white flex items-center gap-2"
+          className="px-3 py-1.5 bg-clinical-blue/10 border border-clinical-blue/20 rounded-sm flex items-center gap-2 group hover:bg-clinical-blue/20 transition-all"
         >
-          <Beaker size={12} className="text-clinical-blue" />
-          <span className="font-medium">{order.testName}</span>
+          <Beaker size={10} className="text-clinical-blue" />
+          <span className="text-[11px] font-bold text-white uppercase tracking-tight">
+            {order.testName}
+          </span>
           {order.notes && (
-            <span className="text-[10px] text-on-surface-variant italic">
+            <span className="text-[9px] text-on-surface-variant italic font-medium">
               ({order.notes})
             </span>
           )}
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 };
 

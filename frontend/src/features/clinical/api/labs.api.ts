@@ -16,9 +16,19 @@ export interface CreateLabOrderRequest {
   notes?: string;
 }
 
+export interface CreateBulkLabOrdersRequest {
+  visitId: string;
+  testNames: string[];
+}
+
 export const labsApi = {
   create: async (data: CreateLabOrderRequest) => {
     const res = await api.post<LabOrder>("/lab-orders", data);
+    return res.data;
+  },
+
+  createBulk: async (data: CreateBulkLabOrdersRequest) => {
+    const res = await api.post<LabOrder[]>("/lab-orders/bulk", data);
     return res.data;
   },
 

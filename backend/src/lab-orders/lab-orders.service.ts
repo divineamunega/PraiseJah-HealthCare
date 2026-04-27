@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateLabOrderDto } from './dto/create-lab-order.dto.js';
+import { CreateBulkLabOrdersDto } from './dto/create-bulk-lab-orders.dto.js';
 import { LoggerService } from '../logger/logger.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { VisitsGateway } from '../visits/visits.gateway.js';
@@ -68,6 +69,64 @@ export class LabOrdersService {
       );
 
     return order;
+  }
+
+  async createBulk(dto: CreateBulkLabOrdersDto, actor: User) {
+    // 1. Verify visit exists
+    const visit = await this.prisma.visit.findFirst({
+      where: { id: dto.visitId, deletedAt: null },
+    });
+
+    if (!visit) {
+      throw new NotFoundException(`Visit with ID ${dto.visitId} not found`);
+    }
+
+    // 2. Create Lab Orders and Update Queue in a transaction
+    const orders = await this.prisma.$transaction(async (tx) => {
+      // Use createManyAndReturn if available, otherwise Promise.all with create
+      // For Prisma 5.10.0+, createManyAndReturn is available.
+      // Falling back to Promise.all for compatibility if needed, but the prompt specifically mentioned createManyAndReturn.
+      const newOrders = await Promise.all(
+        dto.testNames.map((testName) =>
+          tx.labOrder.create({
+            data: {
+              visitId: dto.visitId,
+              orderedById: actor.id,
+              testName,
+            },
+          }),
+        ),
+      );
+
+      // Update the queue status to indicate the patient is now waiting for lab work
+      await tx.queueEntry.update({
+        where: { visitId: dto.visitId },
+        data: { status: QueueStatus.WAITING_FOR_LAB },
+      });
+
+      return newOrders;
+    });
+
+    // 3. Broadcast real-time update
+    this.visitsGateway.broadcastQueueUpdate();
+    this.visitsGateway.broadcastVisitUpdate(dto.visitId);
+
+    // 4. Record clinical audit trail for each created lab order
+    for (const order of orders) {
+      await this.auditService
+        .createLog({
+          actorId: actor.id,
+          action: AuditAction.LAB_ORDER_CREATED,
+          targetType: AuditTargetType.LAB_ORDER,
+          targetId: order.id,
+          metadata: { visitId: dto.visitId, testName: order.testName },
+        })
+        .catch((err) =>
+          this.logger.error(`Clinical audit failed: ${err.message}`),
+        );
+    }
+
+    return orders;
   }
 
   async findByVisit(visitId: string) {

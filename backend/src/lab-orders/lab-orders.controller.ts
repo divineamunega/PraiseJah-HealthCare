@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { LabOrdersService } from './lab-orders.service.js';
 import { CreateLabOrderDto } from './dto/create-lab-order.dto.js';
+import { CreateBulkLabOrdersDto } from './dto/create-bulk-lab-orders.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
@@ -33,6 +34,14 @@ export class LabOrdersController {
   @ApiOperation({ summary: 'Create a laboratory diagnostic order' })
   create(@Body() dto: CreateLabOrderDto, @CurrentUser() user: User) {
     return this.labOrdersService.create(dto, user);
+  }
+
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.DOCTOR)
+  @ApiOperation({ summary: 'Create multiple lab orders at once' })
+  createBulk(@Body() dto: CreateBulkLabOrdersDto, @CurrentUser() user: User) {
+    return this.labOrdersService.createBulk(dto, user);
   }
 
   @Get('visit/:visitId')
