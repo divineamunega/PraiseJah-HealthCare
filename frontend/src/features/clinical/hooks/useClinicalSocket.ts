@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { PATIENT_KEYS } from "./usePatients";
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import { toast } from "sonner";
 
 let socket: Socket | null = null;
 
@@ -44,6 +46,24 @@ export const useClinicalSocket = () => {
           queryKey: ["visits", "detail", data.visitId],
         });
       });
+
+      socket.on("lab_results_ready", (data) => {
+        console.log(
+          `Real-time update: Lab results ready for visit ${data.visitId}`,
+        );
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.id === data.doctorId) {
+          toast.success("Lab Results Ready", {
+            description: "New results have been submitted for your patient.",
+          });
+        }
+        queryClient.invalidateQueries({
+          queryKey: ["labs", "visit", data.visitId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["visits", "detail", data.visitId],
+        });
+      });
     }
 
     return () => {
@@ -54,3 +74,4 @@ export const useClinicalSocket = () => {
 
   return socket;
 };
+

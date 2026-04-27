@@ -19,3 +19,26 @@ export class CreateLabOrderDto {
   @IsString()
   readonly notes?: string;
 }
+
+export class CreateBulkLabOrdersDto {
+  @ApiProperty({ example: 'uuid-of-visit' })
+  @IsNotEmpty()
+  @IsUUID()
+  readonly visitId!: string;
+
+  @ApiProperty({ example: ['FBC', 'Malaria Parasite'] })
+  @IsNotEmpty()
+  @IsString({ each: true })
+  readonly testNames!: string[];
+
+  @ApiPropertyOptional({ example: 'Urgent' })
+  @IsOptional()
+  @IsString()
+  readonly notes?: string;
+}
+
+export class CompleteLabOrderResultsDto {
+  @ApiProperty({ example: { hb: 13.5, wbc: 5000 } })
+  @IsNotEmpty()
+  readonly results!: Record<string, any>;
+}

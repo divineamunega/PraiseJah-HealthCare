@@ -39,4 +39,12 @@ export class VisitsGateway
   broadcastVisitUpdate(visitId: string) {
     this.server.emit('visit_updated', { visitId, timestamp: new Date() });
   }
+
+  broadcastLabResultsReady(visitId: string, doctorId: string) {
+    this.server.emit('lab_results_ready', {
+      visitId,
+      doctorId,
+      timestamp: new Date(),
+    });
+  }
 }

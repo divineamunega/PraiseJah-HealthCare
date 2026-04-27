@@ -17,10 +17,15 @@ import {
   AlertTriangle,
   Plus,
   Beaker,
+  Check,
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
-import { useLabs, useCreateLabOrder } from "../hooks/useLabs";
+import {
+  useLabs,
+  useCreateLabOrder,
+  useCreateBulkLabOrders,
+} from "../hooks/useLabs";
 import {
   usePrescriptions,
   useCreatePrescription,
@@ -28,6 +33,7 @@ import {
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
 import { useAutosaveSOAP, type SoapData } from "../hooks/useAutosaveSOAP";
 import { motion, AnimatePresence } from "framer-motion";
+import { LAB_CATALOG } from "../constants/lab-catalog";
 
 const calculateAge = (dob: string | undefined) => {
   if (!dob) return "??";
@@ -68,6 +74,7 @@ const EncounterWorkstation = () => {
     "DOCUMENTATION" | "LAB_ORDERS" | "E_PRESCRIPTION"
   >("DOCUMENTATION");
   const [testName, setTestName] = useState("");
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
 
   const [prescriptionForm, setPrescriptionForm] = useState({
     medication: "",
@@ -80,6 +87,7 @@ const EncounterWorkstation = () => {
   const { data: prescriptions, isLoading: isLoadingPrescriptions } =
     usePrescriptions(visitId!);
   const createLabOrder = useCreateLabOrder();
+  const createBulkLabOrders = useCreateBulkLabOrders();
   const createPrescription = useCreatePrescription();
 
   // SOAP Note State
@@ -189,6 +197,21 @@ const EncounterWorkstation = () => {
       testName: testName.trim(),
     });
     setTestName("");
+  };
+
+  const handleToggleTest = (name: string) => {
+    setSelectedTests((prev) =>
+      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name],
+    );
+  };
+
+  const handleRequestBulkLabs = async () => {
+    if (selectedTests.length === 0 || !visitId) return;
+    await createBulkLabOrders.mutateAsync({
+      visitId,
+      testNames: selectedTests,
+    });
+    setSelectedTests([]);
   };
 
   const handleAddPrescription = async () => {
@@ -527,48 +550,115 @@ const EncounterWorkstation = () => {
               )}
 
               {activeTab === "LAB_ORDERS" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="p-10 max-w-5xl mx-auto space-y-10"
-                >
-                  <section className="space-y-6">
-                    <div className="flex flex-col gap-1">
-                      <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.4em] flex items-center gap-3">
-                        <Beaker size={14} className="text-clinical-blue" />
-                        New Lab Order
-                      </h4>
-                      <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
-                        Request diagnostic investigations for this patient
+              <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="p-10 max-w-5xl mx-auto space-y-10"
+              >
+              <section className="space-y-6">
+              <div className="flex flex-col gap-1">
+              <h4 className="text-[10px] font-bold text-clinical-blue uppercase tracking-[0.4em] flex items-center gap-3">
+                <Beaker size={14} className="text-clinical-blue" />
+                Lab Catalog
+              </h4>
+              <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
+                Select tests from the predefined catalog
+              </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.values(LAB_CATALOG).map((test) => {
+                const isSelected = selectedTests.includes(test.name);
+                return (
+                  <button
+                    key={test.name}
+                    onClick={() => handleToggleTest(test.name)}
+                    className={`p-4 border text-left transition-all flex items-center justify-between group ${
+                      isSelected
+                        ? "bg-clinical-blue/10 border-clinical-blue text-white"
+                        : "bg-surface-container-low border-white/5 text-on-surface-variant hover:border-white/20"
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-tight">
+                        {test.name}
+                      </p>
+                      <p className="text-[8px] opacity-50 uppercase tracking-widest mt-1">
+                        {test.fields.length} parameters
                       </p>
                     </div>
-
-                    <div className="flex gap-4">
-                      <input
-                        type="text"
-                        placeholder="Enter test name (e.g. Full Blood Count, Malaria Parasite...)"
-                        className="flex-1 bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
-                        value={testName}
-                        onChange={(e) => setTestName(e.target.value)}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && handleRequestLab()
-                        }
+                    {isSelected ? (
+                      <CheckCircle2
+                        size={16}
+                        className="text-clinical-blue"
                       />
-                      <button
-                        onClick={handleRequestLab}
-                        disabled={createLabOrder.isPending || !testName.trim()}
-                        className="bg-clinical-blue px-6 py-4 text-[10px] font-bold text-background hover:bg-clinical-blue/90 transition-all flex items-center gap-3 shadow-lg shadow-clinical-blue/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {createLabOrder.isPending ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Plus size={16} />
-                        )}
-                        Request Lab Order
-                      </button>
-                    </div>
-                  </section>
+                    ) : (
+                      <Plus
+                        size={16}
+                        className="opacity-20 group-hover:opacity-100"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+              </div>
+
+              {selectedTests.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="flex justify-end pt-4"
+              >
+                <button
+                  onClick={handleRequestBulkLabs}
+                  disabled={createBulkLabOrders.isPending}
+                  className="bg-clinical-blue px-8 py-4 text-[10px] font-bold text-background hover:bg-clinical-blue/90 transition-all flex items-center gap-3 shadow-lg shadow-clinical-blue/20 uppercase tracking-[0.2em] disabled:opacity-50"
+                >
+                  {createBulkLabOrders.isPending ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Beaker size={16} />
+                  )}
+                  Order {selectedTests.length} Selected Tests
+                </button>
+              </motion.div>
+              )}
+              </section>
+
+              <section className="space-y-6 pt-10 border-t border-white/5">
+              <div className="flex flex-col gap-1">
+              <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.4em] flex items-center gap-3">
+                <Plus size={14} />
+                Custom Order
+              </h4>
+              </div>
+
+              <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="Enter test name for non-catalog order..."
+                className="flex-1 bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
+                value={testName}
+                onChange={(e) => setTestName(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && handleRequestLab()
+                }
+              />
+              <button
+                onClick={handleRequestLab}
+                disabled={createLabOrder.isPending || !testName.trim()}
+                className="bg-white/5 border border-white/10 px-6 py-4 text-[10px] font-bold text-white hover:bg-white/10 transition-all flex items-center gap-3 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {createLabOrder.isPending ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Plus size={16} />
+                )}
+                Request Custom
+              </button>
+              </div>
+              </section>
 
                   <section className="space-y-6">
                     <div className="flex flex-col gap-1">
@@ -592,13 +682,21 @@ const EncounterWorkstation = () => {
                         labs.map((order) => (
                           <div
                             key={order.id}
-                            className="bg-surface-container-low border border-white/5 p-4 flex justify-between items-center group hover:border-clinical-blue/20 transition-all"
+                            className={`bg-surface-container-low border border-white/5 p-4 flex justify-between items-center group transition-all ${
+                              order.status === "COMPLETED"
+                                ? "border-l-4 border-l-green-500"
+                                : "border-l-4 border-l-yellow-500"
+                            }`}
                           >
                             <div className="flex items-center gap-4">
                               <div className="w-8 h-8 bg-background border border-white/5 flex items-center justify-center">
                                 <Microscope
                                   size={14}
-                                  className="text-clinical-blue/50"
+                                  className={
+                                    order.status === "COMPLETED"
+                                      ? "text-green-500"
+                                      : "text-yellow-500"
+                                  }
                                 />
                               </div>
                               <div>
@@ -614,9 +712,20 @@ const EncounterWorkstation = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-[8px] font-bold bg-yellow-400/10 text-yellow-400 px-2 py-1 border border-yellow-400/20 uppercase tracking-widest">
-                                Pending Result
-                              </span>
+                              {order.status === "COMPLETED" ? (
+                                <div className="text-right">
+                                  <span className="text-[8px] font-bold bg-green-500/10 text-green-500 px-2 py-1 border border-green-500/20 uppercase tracking-widest mb-1 block">
+                                    Results Ready
+                                  </span>
+                                  <p className="text-[9px] text-white/50 italic">
+                                    {JSON.stringify(order.results)}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="text-[8px] font-bold bg-yellow-400/10 text-yellow-400 px-2 py-1 border border-yellow-400/20 uppercase tracking-widest">
+                                  Pending Result
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))
