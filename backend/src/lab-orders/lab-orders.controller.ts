@@ -8,7 +8,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { LabOrdersService } from './lab-orders.service.js';
-import { CreateLabOrderDto } from './dto/create-lab-order.dto.js';
+import {
+  CreateLabOrderDto,
+  CreateBulkLabOrdersDto,
+  CompleteLabOrderResultsDto,
+} from './dto/create-lab-order.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { ActiveStatusGuard } from '../auth/guards/active-status.guard.js';
@@ -35,6 +39,14 @@ export class LabOrdersController {
     return this.labOrdersService.create(dto, user);
   }
 
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.DOCTOR)
+  @ApiOperation({ summary: 'Create multiple laboratory diagnostic orders' })
+  createBulk(@Body() dto: CreateBulkLabOrdersDto, @CurrentUser() user: User) {
+    return this.labOrdersService.createBulk(dto, user);
+  }
+
   @Get('visit/:visitId')
   @ApiOperation({ summary: 'Get lab orders for a specific visit' })
   findByVisit(@Param('visitId') visitId: string) {
@@ -49,5 +61,23 @@ export class LabOrdersController {
   })
   complete(@Param('visitId') visitId: string, @CurrentUser() user: User) {
     return this.labOrdersService.complete(visitId, user);
+  }
+
+  @Post(':orderId/complete-with-results')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.LAB_SCIENTIST, Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Submit results for a lab order and mark as completed',
+  })
+  completeWithResults(
+    @Param('orderId') orderId: string,
+    @Body() dto: CompleteLabOrderResultsDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.labOrdersService.completeWithResults(
+      orderId,
+      dto.results,
+      user,
+    );
   }
 }

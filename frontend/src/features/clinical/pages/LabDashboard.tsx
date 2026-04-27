@@ -9,7 +9,12 @@ import {
 } from "lucide-react";
 import { useVisits } from "../hooks/useVisits";
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
-import { useLabs, useCompleteLabOrder } from "../hooks/useLabs";
+import {
+  useLabs,
+  useCompleteLabOrder,
+  useCompleteLabWithResults,
+} from "../hooks/useLabs";
+import { DynamicResultForm } from "../components/DynamicResultForm";
 
 const calculateAge = (dob: string | undefined) => {
   if (!dob) return "??";
@@ -25,27 +30,61 @@ const calculateAge = (dob: string | undefined) => {
 
 const LabOrderList = ({ visitId }: { visitId: string }) => {
   const { data: labs, isLoading } = useLabs(visitId);
+  const completeWithResultsMutation = useCompleteLabWithResults();
 
   if (isLoading)
     return <div className="animate-pulse h-4 bg-white/5 w-32 rounded" />;
 
+  const pendingLabs = labs?.filter((l) => l.status === "PENDING") || [];
+  const completedLabs = labs?.filter((l) => l.status === "COMPLETED") || [];
+
   return (
-    <ul className="space-y-1">
-      {labs?.map((order) => (
-        <li
-          key={order.id}
-          className="text-sm text-white flex items-center gap-2"
-        >
-          <Beaker size={12} className="text-clinical-blue" />
-          <span className="font-medium">{order.testName}</span>
-          {order.notes && (
-            <span className="text-[10px] text-on-surface-variant italic">
-              ({order.notes})
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-6">
+      {pendingLabs.length > 0 && (
+        <div className="space-y-4">
+          {pendingLabs.map((order) => (
+            <DynamicResultForm
+              key={order.id}
+              testName={order.testName}
+              isSubmitting={
+                completeWithResultsMutation.isPending &&
+                completeWithResultsMutation.variables?.orderId === order.id
+              }
+              onSubmit={(results) =>
+                completeWithResultsMutation.mutate({
+                  orderId: order.id,
+                  results,
+                })
+              }
+            />
+          ))}
+        </div>
+      )}
+
+      {completedLabs.length > 0 && (
+        <div className="pt-4 border-t border-white/5">
+          <p className="text-[8px] text-green-400 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+            <CheckCircle2 size={10} /> Completed Tests
+          </p>
+          <ul className="space-y-1">
+            {completedLabs.map((order) => (
+              <li
+                key={order.id}
+                className="text-[10px] text-on-surface-variant flex items-center gap-2"
+              >
+                <span className="w-1 h-1 bg-green-500 rounded-full" />
+                <span className="font-medium text-white/70">
+                  {order.testName}
+                </span>
+                <span className="text-[9px] opacity-50 italic">
+                  — Results: {JSON.stringify(order.results)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -134,10 +173,10 @@ const LabDashboard = () => {
             labQueue.map((visit) => (
               <div
                 key={visit.id}
-                className="bg-surface-container-low border border-white/5 flex items-stretch border-l-4 border-l-yellow-400/50"
+                className="bg-surface-container-low border border-white/5 flex flex-col items-stretch border-l-4 border-l-yellow-400/50"
               >
                 {/* Patient Info */}
-                <div className="p-6 border-r border-white/5 flex gap-6 items-center min-w-[300px]">
+                <div className="p-6 border-b border-white/5 flex gap-6 items-center">
                   <div className="w-12 h-12 flex items-center justify-center font-bold text-lg bg-background text-on-surface-variant border border-white/5">
                     {visit.patient?.firstName?.[0]}
                     {visit.patient?.lastName?.[0]}
@@ -158,31 +197,30 @@ const LabDashboard = () => {
                       </span>
                     </div>
                   </div>
+
+                  <div className="ml-auto">
+                    <button
+                      onClick={() => handleComplete(visit.id)}
+                      disabled={completeLabOrderMutation.isPending}
+                      className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 disabled:opacity-50 transition-all"
+                    >
+                      {completeLabOrderMutation.isPending &&
+                      completeLabOrderMutation.variables === visit.id ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={16} />
+                      )}
+                      Finalize All & Return
+                    </button>
+                  </div>
                 </div>
 
                 {/* Tests Section */}
-                <div className="flex-1 p-6 bg-background/20">
-                  <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-[0.2em] mb-3">
-                    Requested Tests
+                <div className="p-6 bg-background/20">
+                  <p className="text-[8px] text-on-surface-variant uppercase font-bold tracking-[0.2em] mb-4">
+                    Laboratory Entry Forms
                   </p>
                   <LabOrderList visitId={visit.id} />
-                </div>
-
-                {/* Actions */}
-                <div className="p-6 flex items-center bg-background/40">
-                  <button
-                    onClick={() => handleComplete(visit.id)}
-                    disabled={completeLabOrderMutation.isPending}
-                    className="flex items-center gap-3 px-6 py-3 bg-clinical-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-clinical-blue/90 disabled:opacity-50 transition-all"
-                  >
-                    {completeLabOrderMutation.isPending &&
-                    completeLabOrderMutation.variables === visit.id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <CheckCircle2 size={16} />
-                    )}
-                    MARK AS COMPLETED
-                  </button>
                 </div>
               </div>
             ))
@@ -208,3 +246,4 @@ const LabDashboard = () => {
 };
 
 export default LabDashboard;
+

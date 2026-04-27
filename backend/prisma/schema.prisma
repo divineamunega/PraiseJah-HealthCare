@@ -52,6 +52,11 @@ enum Sex {
   OTHER
 }
 
+enum LabOrderStatus {
+  PENDING
+  COMPLETED
+}
+
 enum AuditTargetType {
   USER
   PATIENT
@@ -338,6 +343,8 @@ model LabOrder {
   orderedById String?
   testName    String
   notes       String?
+  status      LabOrderStatus @default(PENDING)
+  results     Json?
   createdAt   DateTime  @default(now())
   deletedAt   DateTime? // Soft delete
 
