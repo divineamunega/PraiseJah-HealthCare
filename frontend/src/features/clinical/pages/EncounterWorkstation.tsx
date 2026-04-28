@@ -20,11 +20,7 @@ import {
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
-import {
-  useLabs,
-  useCreateLabOrder,
-  useCreateBulkLabOrders,
-} from "../hooks/useLabs";
+import { useLabs, useCreateBulkLabOrders } from "../hooks/useLabs";
 import {
   usePrescriptions,
   useCreatePrescription,
@@ -75,7 +71,6 @@ const EncounterWorkstation = () => {
   const [activeTab, setActiveTab] = useState<
     "DOCUMENTATION" | "LAB_ORDERS" | "E_PRESCRIPTION"
   >("DOCUMENTATION");
-  const [testName, setTestName] = useState("");
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
 
   const [prescriptionForm, setPrescriptionForm] = useState({
@@ -88,7 +83,6 @@ const EncounterWorkstation = () => {
   const { data: labs, isLoading: isLoadingLabs } = useLabs(visitId!);
   const { data: prescriptions, isLoading: isLoadingPrescriptions } =
     usePrescriptions(visitId!);
-  const createLabOrder = useCreateLabOrder();
   const createBulkLabOrders = useCreateBulkLabOrders();
   const createPrescription = useCreatePrescription();
 
@@ -191,15 +185,6 @@ const EncounterWorkstation = () => {
   };
 
   const syncDisplay = getSyncDisplay();
-
-  const handleRequestLab = async () => {
-    if (!testName.trim() || !visitId) return;
-    await createLabOrder.mutateAsync({
-      visitId,
-      testName: testName.trim(),
-    });
-    setTestName("");
-  };
 
   const handleToggleTest = (testKey: string) => {
     setSelectedTests((prev) =>
@@ -630,39 +615,6 @@ const EncounterWorkstation = () => {
               )}
               </section>
 
-              <section className="space-y-6 pt-10 border-t border-white/5">
-              <div className="flex flex-col gap-1">
-              <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.4em] flex items-center gap-3">
-                <Plus size={14} />
-                Custom Order
-              </h4>
-              </div>
-
-              <div className="flex gap-4">
-              <input
-                type="text"
-                placeholder="Enter test name for non-catalog order..."
-                className="flex-1 bg-surface-container-low border border-white/5 p-4 text-white text-sm outline-none focus:border-clinical-blue/30 transition-all placeholder:text-white/5 shadow-inner rounded-sm"
-                value={testName}
-                onChange={(e) => setTestName(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && handleRequestLab()
-                }
-              />
-              <button
-                onClick={handleRequestLab}
-                disabled={createLabOrder.isPending || !testName.trim()}
-                className="bg-white/5 border border-white/10 px-6 py-4 text-[10px] font-bold text-white hover:bg-white/10 transition-all flex items-center gap-3 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {createLabOrder.isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Plus size={16} />
-                )}
-                Request Custom
-              </button>
-              </div>
-              </section>
 
                   <section className="space-y-6">
                     <div className="flex flex-col gap-1">
