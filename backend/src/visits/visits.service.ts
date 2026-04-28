@@ -12,7 +12,9 @@ import { AuditService } from '../audit/audit.service.js';
 import {
   AuditAction,
   AuditTargetType,
+  Prisma,
   QueueStatus,
+  Role,
   VisitStatus,
   User,
 } from '@prisma/client';
@@ -149,9 +151,31 @@ export class VisitsService {
       throw new BadRequestException('No update data provided');
     }
 
+    const updateData: Prisma.VisitUncheckedUpdateInput = { ...dto };
+
+    if (actor.role === Role.DOCTOR && dto.status === VisitStatus.IN_PROGRESS) {
+      if (dto.doctorId && dto.doctorId !== actor.id) {
+        throw new BadRequestException(
+          'Doctor encounter start must use the authenticated doctorId',
+        );
+      }
+
+      updateData.doctorId = actor.id;
+    }
+
+    if (
+      actor.role === Role.DOCTOR &&
+      updateData.status === VisitStatus.IN_PROGRESS &&
+      !updateData.doctorId
+    ) {
+      throw new BadRequestException(
+        'Doctor encounter cannot start without doctor assignment',
+      );
+    }
+
     const updated = await this.prisma.visit.update({
       where: { id },
-      data: dto,
+      data: updateData,
     });
 
     // Broadcast visit update

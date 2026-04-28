@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import {
   Clock,
@@ -57,17 +57,27 @@ const Doctor_Dashboard = () => {
       });
   }, [activeVisits]);
 
+  const [startingVisitId, setStartingVisitId] = useState<string | null>(null);
+
   const handleStartEncounter = async (visitId: string) => {
+    if (!user?.id) {
+      toast.error("Unable to start encounter: doctor session is not ready");
+      return;
+    }
+
+    setStartingVisitId(visitId);
+
     try {
       await api.patch(`/visits/${visitId}`, {
         status: "IN_PROGRESS",
-        doctorId: user?.id,
+        doctorId: user.id,
       });
-      queryClient.invalidateQueries({ queryKey: ["visits"] });
+      await queryClient.invalidateQueries({ queryKey: ["visits"] });
       navigate(`/doctor/encounter/${visitId}`);
     } catch (err: any) {
-      toast.error("Failed to initialize encounter");
-      navigate(`/doctor/encounter/${visitId}`); // Navigate anyway to let workstation handle state
+      toast.error(err?.message || "Failed to initialize encounter. Please retry.");
+    } finally {
+      setStartingVisitId((current) => (current === visitId ? null : current));
     }
   };
 
@@ -154,6 +164,8 @@ const Doctor_Dashboard = () => {
             doctorQueue.map((visit) => {
               const latestVital = visit.vitals?.[0];
               const isActive = visit.status === "IN_PROGRESS";
+
+              const isStarting = startingVisitId === visit.id;
 
               return (
                 <div
@@ -251,7 +263,8 @@ const Doctor_Dashboard = () => {
                           ? navigate(`/doctor/encounter/${visit.id}`)
                           : handleStartEncounter(visit.id)
                       }
-                      className={`flex items-center gap-3 px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      disabled={!isActive && isStarting}
+                      className={`flex items-center gap-3 px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                         isActive
                           ? "bg-green-500 text-white hover:bg-green-400 shadow-lg shadow-green-500/10"
                           : "bg-clinical-blue text-white hover:bg-clinical-blue/90 shadow-lg shadow-clinical-blue/10"
@@ -261,6 +274,11 @@ const Doctor_Dashboard = () => {
                         <>
                           <Stethoscope size={16} />
                           CONTINUE REVIEW
+                        </>
+                      ) : isStarting ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          OPENING...
                         </>
                       ) : (
                         <>
