@@ -43,7 +43,8 @@ const Doctor_Dashboard = () => {
     return activeVisits
       .filter(
         (v) =>
-          v.status === "IN_PROGRESS" ||
+          (v.status === "IN_PROGRESS" &&
+            v.queueEntry?.status !== "WAITING_FOR_PHARMACY") ||
           (v.status === "CREATED" &&
             v.queueEntry?.status === "READY_FOR_DOCTOR"),
       )

@@ -186,6 +186,8 @@ const EncounterWorkstation = () => {
   };
 
   const syncDisplay = getSyncDisplay();
+  const isAwaitingPharmacy =
+    visit?.queueEntry?.status === "WAITING_FOR_PHARMACY";
 
   const handleToggleTest = (testKey: string) => {
     setSelectedTests((prev) =>
@@ -322,7 +324,7 @@ const EncounterWorkstation = () => {
 
           <button
             onClick={handleFinish}
-            disabled={completeVisit.isPending}
+            disabled={completeVisit.isPending || isAwaitingPharmacy}
             className="bg-green-500 px-6 py-3 text-[10px] font-bold text-white hover:bg-green-400 transition-all flex items-center gap-3 shadow-lg shadow-green-500/10 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {completeVisit.isPending ? (
@@ -330,7 +332,7 @@ const EncounterWorkstation = () => {
             ) : (
               <CheckCircle2 size={16} />
             )}
-            Authorize & Complete
+            {isAwaitingPharmacy ? "Awaiting Pharmacy Dispense" : "Authorize & Complete"}
           </button>
         </div>
       </header>

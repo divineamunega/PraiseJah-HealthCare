@@ -34,10 +34,10 @@ export const useClinicalSocket = () => {
 
       socket.on("queue_updated", () => {
         console.log("Real-time update: Clinical Queue modified");
-        // Invalidate both patient and future queue queries
         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all });
         queryClient.invalidateQueries({ queryKey: ["visits"] });
         queryClient.invalidateQueries({ queryKey: ["queue"] });
+        queryClient.invalidateQueries({ queryKey: ["prescriptions"] });
       });
 
       socket.on("visit_updated", (data) => {
@@ -47,6 +47,9 @@ export const useClinicalSocket = () => {
         });
         queryClient.invalidateQueries({
           queryKey: ["labs", "visit", data.visitId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["prescriptions", "visit", data.visitId],
         });
       });
 

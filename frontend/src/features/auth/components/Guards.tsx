@@ -11,6 +11,7 @@ export const ROLE_HOME: Record<string, string> = {
   NURSE: "/nurse",
   SECRETARY: "/secretary",
   LAB_SCIENTIST: "/lab",
+  PHARMACIST: "/pharmacy",
 };
 
 export function getRoleHome(role: Role): string {
@@ -18,12 +19,20 @@ export function getRoleHome(role: Role): string {
 }
 
 const ROLE_ACCESS: Record<string, string[]> = {
-  SUPER_ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab"],
-  ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab"],
+  SUPER_ADMIN: [
+    "/admin",
+    "/doctor",
+    "/nurse",
+    "/secretary",
+    "/lab",
+    "/pharmacy",
+  ],
+  ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab", "/pharmacy"],
   DOCTOR: ["/doctor"],
   NURSE: ["/nurse"],
   SECRETARY: ["/secretary"],
   LAB_SCIENTIST: ["/lab"],
+  PHARMACIST: ["/pharmacy"],
 };
 
 export function canAccess(role: Role, path: string): boolean {

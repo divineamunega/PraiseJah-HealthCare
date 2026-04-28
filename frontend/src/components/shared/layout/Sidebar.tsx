@@ -6,6 +6,7 @@ import {
   UserCheck,
   ClipboardList,
   FlaskConical,
+  Pill,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { useLogout } from "@/features/auth/hooks/useAuth";
@@ -90,6 +91,15 @@ const navItems: NavItem[] = [
     icon: FlaskConical,
     label: "Diagnostic Lab",
     roles: ["LAB_SCIENTIST"],
+  },
+
+  // Pharmacy Routes
+  {
+    id: "pharmacy_dash",
+    path: "/pharmacy",
+    icon: Pill,
+    label: "Pharmacy Desk",
+    roles: ["PHARMACIST"],
   },
 
   // Secretary Routes
