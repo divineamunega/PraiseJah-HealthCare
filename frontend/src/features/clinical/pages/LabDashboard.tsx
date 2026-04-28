@@ -15,6 +15,7 @@ import {
   useCompleteLabWithResults,
 } from "../hooks/useLabs";
 import { DynamicResultForm } from "../components/DynamicResultForm";
+import { LabResultSummary } from "../components/LabResultSummary";
 import { resolveLabTestDefinition } from "../constants/lab-catalog";
 
 const calculateAge = (dob: string | undefined) => {
@@ -79,26 +80,44 @@ const LabOrderList = ({
       )}
 
       {completedLabs.length > 0 && (
-        <div className="pt-4 border-t border-white/5">
-          <p className="text-[8px] text-green-400 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
-            <CheckCircle2 size={10} /> Completed Tests
+        <div className="pt-6 border-t border-white/5 space-y-3">
+          <p className="text-[9px] text-green-300 uppercase font-bold tracking-widest flex items-center gap-2">
+            <CheckCircle2 size={12} /> Completed Tests
           </p>
-          <ul className="space-y-1">
-            {completedLabs.map((order) => (
-              <li
-                key={order.id}
-                className="text-[10px] text-on-surface-variant flex items-center gap-2"
-              >
-                <span className="w-1 h-1 bg-green-500 rounded-full" />
-                <span className="font-medium text-white/70">
-                  {resolveLabTestDefinition(order.testName)?.definition.name ||
-                    order.testName}
-                </span>
-                <span className="text-[9px] opacity-50 italic">
-                  — Results: {JSON.stringify(order.results)}
-                </span>
-              </li>
-            ))}
+
+          <ul className="space-y-3">
+            {completedLabs.map((order) => {
+              const resolvedDefinition = resolveLabTestDefinition(order.testName);
+
+              return (
+                <li
+                  key={order.id}
+                  className="bg-surface-container-low border border-green-500/20 border-l-4 border-l-green-500/70 p-4 space-y-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-white uppercase tracking-tight">
+                        {resolvedDefinition?.definition.name || order.testName}
+                      </p>
+                      <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">
+                        Ordered {new Date(order.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border border-green-500/30 bg-green-500/10 text-green-300">
+                      <CheckCircle2 size={12} />
+                      Results Ready
+                    </span>
+                  </div>
+
+                  <LabResultSummary
+                    testName={order.testName}
+                    results={order.results}
+                    compact
+                  />
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
