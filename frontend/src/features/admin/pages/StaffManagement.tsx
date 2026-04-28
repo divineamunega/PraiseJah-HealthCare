@@ -124,6 +124,8 @@ const StaffManagement = () => {
               >
                 <option value="DOCTOR">Doctor</option>
                 <option value="NURSE">Nurse</option>
+                <option value="LAB_SCIENTIST">Lab Scientist</option>
+                <option value="PHARMACIST">Pharmacist</option>
                 <option value="ADMIN">Admin</option>
                 <option value="SECRETARY">Secretary</option>
               </select>

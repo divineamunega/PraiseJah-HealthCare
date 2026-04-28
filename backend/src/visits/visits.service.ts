@@ -196,6 +196,30 @@ export class VisitsService {
   }
 
   async completeVisit(id: string, actor: User) {
+    const existing = await this.prisma.visit.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        queueEntry: true,
+        prescriptions: {
+          where: { deletedAt: null },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Visit with ID ${id} not found`);
+    }
+
+    if (
+      existing.queueEntry?.status === QueueStatus.WAITING_FOR_PHARMACY &&
+      existing.prescriptions.length > 0
+    ) {
+      throw new BadRequestException(
+        'Cannot complete visit while prescriptions are pending in pharmacy queue',
+      );
+    }
+
     const visit = await this.prisma.visit.update({
       where: { id },
       data: { status: VisitStatus.COMPLETED },

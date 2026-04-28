@@ -40,4 +40,20 @@ export class PrescriptionsController {
   findByVisit(@Param('visitId') visitId: string) {
     return this.prescriptionsService.findByVisit(visitId);
   }
+
+  @Get('pharmacy/queue')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.PHARMACIST, Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get active pharmacy dispensing queue' })
+  findPharmacyQueue() {
+    return this.prescriptionsService.findPharmacyQueue();
+  }
+
+  @Post('pharmacy/visit/:visitId/dispense')
+  @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
+  @Roles(Role.PHARMACIST, Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Dispense queued visit prescriptions' })
+  dispense(@Param('visitId') visitId: string, @CurrentUser() user: User) {
+    return this.prescriptionsService.dispense(visitId, user);
+  }
 }

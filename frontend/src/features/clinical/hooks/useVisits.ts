@@ -67,5 +67,10 @@ export function useCompleteVisit() {
       queryClient.invalidateQueries({ queryKey: VISIT_KEYS.detail(id) });
       toast.success("Visit marked as completed");
     },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.message || "Unable to complete visit",
+      );
+    },
   });
 }

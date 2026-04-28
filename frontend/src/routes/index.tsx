@@ -16,6 +16,7 @@ import EncounterWorkstation from "@/features/clinical/pages/EncounterWorkstation
 import NurseDashboard from "@/features/clinical/pages/NurseDashboard";
 import LabDashboard from "@/features/clinical/pages/LabDashboard";
 import SecretaryDashboard from "@/features/clinical/pages/SecretaryDashboard";
+import PharmacyDashboard from "@/features/clinical/pages/PharmacyDashboard";
 import PatientListPage from "@/features/clinical/pages/PatientListPage";
 
 import { useAuthStore } from "@/features/auth/stores/auth.store";
@@ -188,6 +189,16 @@ const AppRoutes = () => {
           element={
             <RoleGuard path="/lab">
               <LabDashboard />
+            </RoleGuard>
+          }
+        />
+
+        {/* Pharmacy Routes */}
+        <Route
+          path="pharmacy"
+          element={
+            <RoleGuard path="/pharmacy">
+              <PharmacyDashboard />
             </RoleGuard>
           }
         />

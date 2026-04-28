@@ -4,7 +4,8 @@ export type UserRole =
   | "DOCTOR"
   | "NURSE"
   | "SECRETARY"
-  | "LAB_SCIENTIST";
+  | "LAB_SCIENTIST"
+  | "PHARMACIST";
 export type UserStatus = "ACTIVE" | "SUSPENDED" | "PENDING";
 
 export interface User {
