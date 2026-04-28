@@ -268,11 +268,27 @@ export class LabOrdersService {
     this.visitsGateway.broadcastQueueUpdate();
     this.visitsGateway.broadcastVisitUpdate(order.visitId);
 
-    // Notify doctor
-    if (order.visit.doctorId) {
-      this.visitsGateway.broadcastLabResultsReady(
-        order.visitId,
-        order.visit.doctorId,
+    let doctorId = order.visit.doctorId;
+
+    if (!doctorId) {
+      const refreshedVisit = await this.prisma.visit.findUnique({
+        where: { id: order.visitId },
+        select: { doctorId: true },
+      });
+      doctorId = refreshedVisit?.doctorId ?? null;
+    }
+
+    if (doctorId) {
+      this.visitsGateway.broadcastLabResultsReady(order.visitId, doctorId);
+    } else {
+      this.logger.warn(
+        {
+          event: 'LAB_RESULTS_READY_NOTIFICATION_SKIPPED',
+          orderId,
+          visitId: order.visitId,
+          reason: 'doctorId_missing',
+        },
+        LabOrdersService.name,
       );
     }
 
