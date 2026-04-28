@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateLabOrderDto,
@@ -14,6 +18,7 @@ import {
   User,
   LabOrderStatus,
 } from '@prisma/client';
+import { LAB_CATALOG_KEYS } from './constants/lab-catalog.js';
 
 @Injectable()
 export class LabOrdersService {
@@ -84,15 +89,41 @@ export class LabOrdersService {
       throw new NotFoundException(`Visit with ID ${dto.visitId} not found`);
     }
 
+    const normalizedTestNames = dto.testNames.map((testName) =>
+      testName.trim(),
+    );
+
+    if (normalizedTestNames.some((testName) => !testName)) {
+      throw new BadRequestException(
+        'Each lab test name must be a non-empty string',
+      );
+    }
+
+    if (new Set(normalizedTestNames).size !== normalizedTestNames.length) {
+      throw new BadRequestException(
+        'Duplicate lab tests are not allowed in bulk orders',
+      );
+    }
+
+    const invalidTestNames = normalizedTestNames.filter(
+      (testName) => !LAB_CATALOG_KEYS.includes(testName),
+    );
+
+    if (invalidTestNames.length > 0) {
+      throw new BadRequestException(
+        `Invalid lab test(s): ${invalidTestNames.join(', ')}`,
+      );
+    }
+
     // 2. Create Lab Orders and Update Queue in a transaction
     const orders = await this.prisma.$transaction(async (tx) => {
       const newOrders = await Promise.all(
-        dto.testNames.map((testName) =>
+        normalizedTestNames.map((testName) =>
           tx.labOrder.create({
             data: {
               visitId: dto.visitId,
               orderedById: actor.id,
-              testName: testName,
+              testName,
               notes: dto.notes,
             },
           }),
@@ -150,12 +181,19 @@ export class LabOrdersService {
 
     // 2. Update queue status to READY_FOR_DOCTOR in a transaction
     await this.prisma.$transaction(async (tx) => {
-      // Also mark all pending lab orders as completed if they don't have results yet?
-      // For legacy compatibility, let's just mark them as completed
-      await tx.labOrder.updateMany({
-        where: { visitId, status: LabOrderStatus.PENDING, deletedAt: null },
-        data: { status: LabOrderStatus.COMPLETED },
+      const pendingCount = await tx.labOrder.count({
+        where: {
+          visitId,
+          status: LabOrderStatus.PENDING,
+          deletedAt: null,
+        },
       });
+
+      if (pendingCount > 0) {
+        throw new BadRequestException(
+          'Cannot finalize lab orders while pending results remain for this visit',
+        );
+      }
 
       await tx.queueEntry.update({
         where: { visitId },

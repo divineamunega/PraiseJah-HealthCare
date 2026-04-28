@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsUUID } from 'class-validator';
+import {
+  ArrayMinSize,
+  ArrayUnique,
+  IsArray,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { LAB_CATALOG_KEYS } from '../constants/lab-catalog.js';
 
 export class CreateLabOrderDto {
   @ApiProperty({ example: 'uuid-of-visit' })
@@ -27,8 +37,12 @@ export class CreateBulkLabOrdersDto {
   readonly visitId!: string;
 
   @ApiProperty({ example: ['FBC', 'Malaria Parasite'] })
-  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayUnique()
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @IsIn(LAB_CATALOG_KEYS, { each: true })
   readonly testNames!: string[];
 
   @ApiPropertyOptional({ example: 'Urgent' })

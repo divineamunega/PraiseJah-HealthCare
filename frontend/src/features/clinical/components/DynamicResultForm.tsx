@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LAB_CATALOG } from '../constants/lab-catalog';
+import { resolveLabTestDefinition } from '../constants/lab-catalog';
 import { Beaker, Save, Loader2 } from 'lucide-react';
 
 interface DynamicResultFormProps {
@@ -15,7 +15,8 @@ export const DynamicResultForm: React.FC<DynamicResultFormProps> = ({
   initialResults,
   isSubmitting,
 }) => {
-  const definition = LAB_CATALOG[testName];
+  const resolvedTestDefinition = resolveLabTestDefinition(testName);
+  const definition = resolvedTestDefinition?.definition;
   const [values, setValues] = useState<Record<string, any>>(initialResults || {});
 
   if (!definition) {
@@ -89,7 +90,7 @@ export const DynamicResultForm: React.FC<DynamicResultFormProps> = ({
           ) : (
             <Save size={12} />
           )}
-          Save {testName} Results
+          Save {definition.name} Results
         </button>
       </div>
     </form>
