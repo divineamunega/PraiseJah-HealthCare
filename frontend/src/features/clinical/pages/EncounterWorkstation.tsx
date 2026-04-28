@@ -32,6 +32,7 @@ import {
   LAB_CATALOG,
   resolveLabTestDefinition,
 } from "../constants/lab-catalog";
+import { LabResultSummary } from "../components/LabResultSummary";
 
 const calculateAge = (dob: string | undefined) => {
   if (!dob) return "??";
@@ -635,57 +636,73 @@ const EncounterWorkstation = () => {
                           </p>
                         </div>
                       ) : labs && labs.length > 0 ? (
-                        labs.map((order) => (
-                          <div
-                            key={order.id}
-                            className={`bg-surface-container-low border border-white/5 p-4 flex justify-between items-center group transition-all ${
-                              order.status === "COMPLETED"
-                                ? "border-l-4 border-l-green-500"
-                                : "border-l-4 border-l-yellow-500"
-                            }`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="w-8 h-8 bg-background border border-white/5 flex items-center justify-center">
-                                <Microscope
-                                  size={14}
-                                  className={
-                                    order.status === "COMPLETED"
-                                      ? "text-green-500"
-                                      : "text-yellow-500"
-                                  }
-                                />
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-white uppercase tracking-tight">
-                                  {resolveLabTestDefinition(order.testName)
-                                    ?.definition.name || order.testName}
-                                </p>
-                                <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
-                                  Ordered{" "}
-                                  {new Date(
-                                    order.createdAt,
-                                  ).toLocaleTimeString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {order.status === "COMPLETED" ? (
-                                <div className="text-right">
-                                  <span className="text-[8px] font-bold bg-green-500/10 text-green-500 px-2 py-1 border border-green-500/20 uppercase tracking-widest mb-1 block">
-                                    Results Ready
-                                  </span>
-                                  <p className="text-[9px] text-white/50 italic">
-                                    {JSON.stringify(order.results)}
-                                  </p>
+                        labs.map((order) => {
+                          const isCompleted = order.status === "COMPLETED";
+                          const resolvedDefinition = resolveLabTestDefinition(
+                            order.testName,
+                          );
+
+                          return (
+                            <div
+                              key={order.id}
+                              className={`bg-surface-container-low border border-white/5 p-5 space-y-4 transition-all ${
+                                isCompleted
+                                  ? "border-l-4 border-l-green-500/80"
+                                  : "border-l-4 border-l-yellow-400/80"
+                              }`}
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-4">
+                                <div className="flex items-start gap-4">
+                                  <div className="w-10 h-10 bg-background border border-white/10 flex items-center justify-center">
+                                    <Microscope
+                                      size={16}
+                                      className={
+                                        isCompleted
+                                          ? "text-green-400"
+                                          : "text-yellow-400"
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-base font-bold text-white uppercase tracking-tight">
+                                      {resolvedDefinition?.definition.name ||
+                                        order.testName}
+                                    </p>
+                                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">
+                                      Ordered {new Date(order.createdAt).toLocaleTimeString()}
+                                    </p>
+                                  </div>
                                 </div>
-                              ) : (
-                                <span className="text-[8px] font-bold bg-yellow-400/10 text-yellow-400 px-2 py-1 border border-yellow-400/20 uppercase tracking-widest">
-                                  Pending Result
+
+                                <span
+                                  className={`inline-flex items-center gap-2 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border ${
+                                    isCompleted
+                                      ? "border-green-500/30 bg-green-500/10 text-green-300"
+                                      : "border-yellow-400/30 bg-yellow-400/10 text-yellow-300"
+                                  }`}
+                                >
+                                  {isCompleted ? (
+                                    <CheckCircle2 size={12} />
+                                  ) : (
+                                    <AlertCircle size={12} />
+                                  )}
+                                  {isCompleted ? "Results Ready" : "Pending Result"}
                                 </span>
+                              </div>
+
+                              {isCompleted ? (
+                                <LabResultSummary
+                                  testName={order.testName}
+                                  results={order.results}
+                                />
+                              ) : (
+                                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
+                                  Awaiting laboratory data entry.
+                                </p>
                               )}
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       ) : (
                         <div className="p-12 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-30 gap-4">
                           <Microscope
