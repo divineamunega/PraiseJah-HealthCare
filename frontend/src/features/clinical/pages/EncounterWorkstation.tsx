@@ -17,7 +17,6 @@ import {
   AlertTriangle,
   Plus,
   Beaker,
-  Check,
 } from "lucide-react";
 import { useVisit, useCompleteVisit } from "../hooks/useVisits";
 import { useNotes } from "../hooks/useNotes";
@@ -33,7 +32,10 @@ import {
 import { useClinicalSocket } from "../hooks/useClinicalSocket";
 import { useAutosaveSOAP, type SoapData } from "../hooks/useAutosaveSOAP";
 import { motion, AnimatePresence } from "framer-motion";
-import { LAB_CATALOG } from "../constants/lab-catalog";
+import {
+  LAB_CATALOG,
+  resolveLabTestDefinition,
+} from "../constants/lab-catalog";
 
 const calculateAge = (dob: string | undefined) => {
   if (!dob) return "??";
@@ -199,9 +201,11 @@ const EncounterWorkstation = () => {
     setTestName("");
   };
 
-  const handleToggleTest = (name: string) => {
+  const handleToggleTest = (testKey: string) => {
     setSelectedTests((prev) =>
-      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name],
+      prev.includes(testKey)
+        ? prev.filter((selectedKey) => selectedKey !== testKey)
+        : [...prev, testKey],
     );
   };
 
@@ -568,12 +572,12 @@ const EncounterWorkstation = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.values(LAB_CATALOG).map((test) => {
-                const isSelected = selectedTests.includes(test.name);
+              {Object.entries(LAB_CATALOG).map(([testKey, definition]) => {
+                const isSelected = selectedTests.includes(testKey);
                 return (
                   <button
-                    key={test.name}
-                    onClick={() => handleToggleTest(test.name)}
+                    key={testKey}
+                    onClick={() => handleToggleTest(testKey)}
                     className={`p-4 border text-left transition-all flex items-center justify-between group ${
                       isSelected
                         ? "bg-clinical-blue/10 border-clinical-blue text-white"
@@ -582,10 +586,10 @@ const EncounterWorkstation = () => {
                   >
                     <div>
                       <p className="text-xs font-bold uppercase tracking-tight">
-                        {test.name}
+                        {definition.name}
                       </p>
                       <p className="text-[8px] opacity-50 uppercase tracking-widest mt-1">
-                        {test.fields.length} parameters
+                        {definition.fields.length} parameters
                       </p>
                     </div>
                     {isSelected ? (
@@ -701,7 +705,8 @@ const EncounterWorkstation = () => {
                               </div>
                               <div>
                                 <p className="text-sm font-bold text-white uppercase tracking-tight">
-                                  {order.testName}
+                                  {resolveLabTestDefinition(order.testName)
+                                    ?.definition.name || order.testName}
                                 </p>
                                 <p className="text-[8px] font-bold text-on-surface-variant uppercase tracking-widest">
                                   Ordered{" "}

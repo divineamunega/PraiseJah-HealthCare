@@ -51,3 +51,5 @@ export const LAB_CATALOG: Record<string, LabTestDefinition> = {
     ],
   },
 };
+
+export const LAB_CATALOG_KEYS = Object.keys(LAB_CATALOG);
