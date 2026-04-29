@@ -18,6 +18,7 @@ import LabDashboard from "@/features/clinical/pages/LabDashboard";
 import SecretaryDashboard from "@/features/clinical/pages/SecretaryDashboard";
 import PharmacyDashboard from "@/features/clinical/pages/PharmacyDashboard";
 import PatientListPage from "@/features/clinical/pages/PatientListPage";
+import PatientProfilePage from "@/features/clinical/pages/PatientProfilePage";
 
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import {
@@ -164,6 +165,14 @@ const AppRoutes = () => {
             </RoleGuard>
           }
         />
+        <Route
+          path="doctor/patients/:id"
+          element={
+            <RoleGuard path="/doctor/patients">
+              <PatientProfilePage />
+            </RoleGuard>
+          }
+        />
 
         {/* Nurse Routes */}
         <Route
@@ -182,13 +191,30 @@ const AppRoutes = () => {
             </RoleGuard>
           }
         />
+        <Route
+          path="nurse/patients/:id"
+          element={
+            <RoleGuard path="/nurse/patients">
+              <PatientProfilePage />
+            </RoleGuard>
+          }
+        />
 
         {/* Lab Routes */}
+        ...
         <Route
-          path="lab"
+          path="secretary/patients"
           element={
-            <RoleGuard path="/lab">
-              <LabDashboard />
+            <RoleGuard path="/secretary/patients">
+              <PatientListPage />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="secretary/patients/:id"
+          element={
+            <RoleGuard path="/secretary/patients">
+              <PatientProfilePage />
             </RoleGuard>
           }
         />

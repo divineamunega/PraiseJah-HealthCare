@@ -27,12 +27,12 @@ const ROLE_ACCESS: Record<string, string[]> = {
     "/lab",
     "/pharmacy",
   ],
-  ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab", "/pharmacy"],
-  DOCTOR: ["/doctor"],
-  NURSE: ["/nurse"],
-  SECRETARY: ["/secretary"],
-  LAB_SCIENTIST: ["/lab"],
-  PHARMACIST: ["/pharmacy"],
+  ADMIN: ["/admin", "/doctor", "/nurse", "/secretary", "/lab", "/pharmacy", "/patients"],
+  DOCTOR: ["/doctor", "/patients", "/doctor/patients"],
+  NURSE: ["/nurse", "/patients", "/nurse/patients"],
+  SECRETARY: ["/secretary", "/patients", "/secretary/patients"],
+  LAB_SCIENTIST: ["/lab", "/patients"],
+  PHARMACIST: ["/pharmacy", "/patients"],
 };
 
 export function canAccess(role: Role, path: string): boolean {

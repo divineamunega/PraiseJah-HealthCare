@@ -68,4 +68,11 @@ export const patientsApi = {
   remove: async (id: string) => {
     await api.delete(`/patients/${id}`);
   },
+
+  getHistory: async (id: string) => {
+    const res = await api.get<Patient & { visits: any[] }>(
+      `/patients/${id}/history`,
+    );
+    return res.data;
+  },
 };

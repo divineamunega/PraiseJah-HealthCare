@@ -94,6 +94,44 @@ export class PatientsService {
     return patient;
   }
 
+  async getHistory(id: string) {
+    const patient = await this.prisma.patient.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        visits: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            doctor: {
+              select: { firstName: true, lastName: true },
+            },
+            vitals: {
+              where: { deletedAt: null },
+              orderBy: { recordedAt: 'desc' },
+            },
+            clinicalNotes: {
+              where: { deletedAt: null },
+            },
+            labOrders: {
+              where: { deletedAt: null },
+              orderBy: { createdAt: 'desc' },
+            },
+            prescriptions: {
+              where: { deletedAt: null },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
+      },
+    });
+
+    if (!patient) {
+      throw new NotFoundException(`Patient with ID ${id} not found`);
+    }
+
+    return patient;
+  }
+
   async update(
     id: string,
     dto: UpdatePatientDto,

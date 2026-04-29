@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import {
   Database,
   Users,
@@ -8,6 +9,7 @@ import {
   MoreHorizontal,
   Loader2,
   RefreshCw,
+  UserCircle,
 } from "lucide-react";
 import { usePatients } from "../hooks/usePatients";
 import { useCheckIn } from "../hooks/useVisits";
@@ -223,6 +225,13 @@ const PatientListPage = () => {
                           Check In
                         </button>
                       )}
+                      <Link
+                        to={`/${user?.role.toLowerCase()}/patients/${patient.id}`}
+                        className="flex items-center gap-2 bg-surface-container-high border border-white/10 px-3 py-1.5 text-[10px] font-bold text-white hover:border-clinical-blue/50 transition-all uppercase tracking-tighter"
+                      >
+                        <UserCircle size={14} className="text-clinical-blue" />
+                        View Profile
+                      </Link>
                       <button className="p-2 hover:bg-background border border-transparent hover:border-white/5 text-on-surface-variant hover:text-white transition-all">
                         <MoreHorizontal size={16} />
                       </button>

@@ -11,6 +11,7 @@ export const PATIENT_KEYS = {
   list: (query?: PatientQuery) =>
     [...PATIENT_KEYS.all, "list", { query }] as const,
   detail: (id: string) => [...PATIENT_KEYS.all, "detail", id] as const,
+  history: (id: string) => [...PATIENT_KEYS.all, "history", id] as const,
 };
 
 export function usePatients(query?: PatientQuery) {
@@ -27,6 +28,14 @@ export function usePatient(id: string) {
   return useQuery({
     queryKey: PATIENT_KEYS.detail(id),
     queryFn: () => patientsApi.findOne(id),
+    enabled: !!id,
+  });
+}
+
+export function usePatientHistory(id: string) {
+  return useQuery({
+    queryKey: PATIENT_KEYS.history(id),
+    queryFn: () => patientsApi.getHistory(id),
     enabled: !!id,
   });
 }

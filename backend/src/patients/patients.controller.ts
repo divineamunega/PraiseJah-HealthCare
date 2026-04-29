@@ -77,6 +77,18 @@ export class PatientsController {
     return this.patientsService.findOne(id);
   }
 
+  @Get(':id/history')
+  @ApiOperation({ summary: 'Get a patient medical history' })
+  @Audit({
+    action: AuditAction.PATIENT_VIEWED,
+    targetType: AuditTargetType.PATIENT,
+  })
+  @ApiResponse({ status: 200, description: 'The patient history details.' })
+  @ApiResponse({ status: 404, description: 'Patient not found.' })
+  getHistory(@Param('id') id: string) {
+    return this.patientsService.getHistory(id);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard, ActiveStatusGuard)
   @Roles(Role.SECRETARY, Role.NURSE, Role.DOCTOR)
