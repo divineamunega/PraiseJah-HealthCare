@@ -211,15 +211,36 @@ export class VisitsService {
       throw new NotFoundException(`Visit with ID ${id} not found`);
     }
 
-    if (
-      existing.queueEntry?.status === QueueStatus.WAITING_FOR_PHARMACY &&
-      existing.prescriptions.length > 0
-    ) {
-      throw new BadRequestException(
-        'Cannot complete visit while prescriptions are pending in pharmacy queue',
-      );
+    const hasPrescriptions = existing.prescriptions.length > 0;
+    
+    // If the doctor is finishing, and there are prescriptions, 
+    // we just move the patient to the pharmacy queue.
+    // The visit only truly "COMPLETES" when the pharmacy dispenses.
+    if (hasPrescriptions && existing.queueEntry?.status !== QueueStatus.DONE) {
+       await this.prisma.queueEntry.update({
+         where: { visitId: id },
+         data: { status: QueueStatus.WAITING_FOR_PHARMACY },
+       });
+       
+       this.visitsGateway.broadcastQueueUpdate();
+       this.visitsGateway.broadcastVisitUpdate(id);
+       
+       // Log this as a transition
+       await this.auditService.createLog({
+         actorId: actor.id,
+         action: AuditAction.VISIT_UPDATED,
+         targetType: AuditTargetType.VISIT,
+         targetId: id,
+         metadata: { event: 'MOVED_TO_PHARMACY' }
+       }).catch(err => this.logger.error(`Audit failed: ${err.message}`));
+
+       return { 
+         success: true,
+         message: 'Patient moved to pharmacy queue.' 
+       };
     }
 
+    // If no prescriptions, we can close the visit entirely
     const visit = await this.prisma.visit.update({
       where: { id },
       data: { status: VisitStatus.COMPLETED },
