@@ -30,23 +30,40 @@ export class ClinicalNotesService {
       throw new NotFoundException(`Visit with ID ${dto.visitId} not found`);
     }
 
-    // 2. Upsert the note with optimistic concurrency control
-    // Increment version on every update for last-write-wins semantics
-    const note = await this.prisma.clinicalNote.upsert({
-      where: { visitId: dto.visitId },
-      update: {
-        chiefComplaint: dto.chiefComplaint,
-        content: dto.content,
-        authorId: actor.id,
-        version: { increment: 1 },
-      },
-      create: {
-        visitId: dto.visitId,
-        authorId: actor.id,
-        chiefComplaint: dto.chiefComplaint,
-        content: dto.content,
-        version: 0,
-      },
+    // 2. Perform upsert with strict optimistic concurrency control
+    const note = await this.prisma.$transaction(async (tx) => {
+      const existingNote = await tx.clinicalNote.findUnique({
+        where: { visitId: dto.visitId },
+      });
+
+      if (existingNote) {
+        // If version is provided, check for conflict
+        if (dto.version !== undefined && existingNote.version !== dto.version) {
+          throw new ConflictException(
+            'The clinical note has been updated by another session or process. Please refresh to get the latest version.',
+          );
+        }
+
+        return tx.clinicalNote.update({
+          where: { id: existingNote.id },
+          data: {
+            chiefComplaint: dto.chiefComplaint,
+            content: dto.content,
+            authorId: actor.id,
+            version: { increment: 1 },
+          },
+        });
+      } else {
+        return tx.clinicalNote.create({
+          data: {
+            visitId: dto.visitId,
+            authorId: actor.id,
+            chiefComplaint: dto.chiefComplaint,
+            content: dto.content,
+            version: 0,
+          },
+        });
+      }
     });
 
     // 3. Broadcast real-time update with version info

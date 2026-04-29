@@ -131,16 +131,18 @@ export function useAutosaveSOAP({
       if (!isMountedRef.current) return;
 
       // Update version and note ID from response
+      // Backend returns BigInt as string due to toJSON override
       versionRef.current = result.version;
       noteIdRef.current = result.id;
       retryCountRef.current = 0;
 
-      setState({
+      setState((prev) => ({
+        ...prev,
         isSaving: false,
         lastSavedAt: new Date(),
         error: null,
         syncStatus: "synced",
-      });
+      }));
 
       // Reset to idle after showing synced status
       setTimeout(() => {
@@ -174,18 +176,18 @@ export function useAutosaveSOAP({
       const errorMessage =
         error.response?.data?.message || error.message || "Failed to save";
 
-      setState({
+      setState((prev) => ({
+        ...prev,
         isSaving: false,
-        lastSavedAt: state.lastSavedAt,
         error: errorMessage,
         syncStatus: "error",
-      });
+      }));
 
       if (onError) {
         onError(new Error(errorMessage));
       }
     }
-  }, [visitId, data, serializeContent, hasContent, onError, state.lastSavedAt]);
+  }, [visitId, data, serializeContent, hasContent, onError]);
 
   // Debounced save trigger
   const scheduleSave = useCallback(() => {

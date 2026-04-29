@@ -108,7 +108,7 @@ const EncounterWorkstation = () => {
   };
 
   // Use the autosave hook
-  const { state: autosaveState, saveNow } = useAutosaveSOAP({
+  const { state: autosaveState, saveNow, reset: resetAutosave } = useAutosaveSOAP({
     visitId: visitId || "",
     data: soapData,
     debounceMs: 1500,
@@ -117,30 +117,43 @@ const EncounterWorkstation = () => {
     },
   });
 
+  // Reset local state when visitId changes
+  useEffect(() => {
+    setChiefComplaint("");
+    setSoap({
+      subjective: "",
+      objective: "",
+      assessment: "",
+      plan: "",
+    });
+    setSelectedTests([]);
+    setPrescriptionForm({
+      medication: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+    });
+    resetAutosave();
+  }, [visitId, resetAutosave]);
+
   // Parse existing note content into SOAP fields
   useEffect(() => {
     if (existingNote && typeof existingNote === "object") {
-      setChiefComplaint((existingNote as any).chiefComplaint || "");
+      // Only initialize if the current fields are empty to avoid overwriting user input
+      setChiefComplaint((prev) => prev || (existingNote as any).chiefComplaint || "");
 
-      // Extract SOAP parts from content string
       const content = (existingNote as any).content || "";
-      const subjectiveMatch = content.match(
-        /\[SUBJECTIVE\]\n([\s\S]*?)\n\n\[OBJECTIVE\]/,
-      );
-      const objectiveMatch = content.match(
-        /\[OBJECTIVE\]\n([\s\S]*?)\n\n\[ASSESSMENT\]/,
-      );
-      const assessmentMatch = content.match(
-        /\[ASSESSMENT\]\n([\s\S]*?)\n\n\[PLAN\]/,
-      );
+      const subjectiveMatch = content.match(/\[SUBJECTIVE\]\n([\s\S]*?)\n\n\[OBJECTIVE\]/);
+      const objectiveMatch = content.match(/\[OBJECTIVE\]\n([\s\S]*?)\n\n\[ASSESSMENT\]/);
+      const assessmentMatch = content.match(/\[ASSESSMENT\]\n([\s\S]*?)\n\n\[PLAN\]/);
       const planMatch = content.match(/\[PLAN\]\n([\s\S]*)/);
 
-      setSoap({
-        subjective: subjectiveMatch ? subjectiveMatch[1] : "",
-        objective: objectiveMatch ? objectiveMatch[1] : "",
-        assessment: assessmentMatch ? assessmentMatch[1] : "",
-        plan: planMatch ? planMatch[1] : "",
-      });
+      setSoap((prev) => ({
+        subjective: prev.subjective || (subjectiveMatch ? subjectiveMatch[1] : ""),
+        objective: prev.objective || (objectiveMatch ? objectiveMatch[1] : ""),
+        assessment: prev.assessment || (assessmentMatch ? assessmentMatch[1] : ""),
+        plan: prev.plan || (planMatch ? planMatch[1] : ""),
+      }));
     }
   }, [existingNote]);
 
