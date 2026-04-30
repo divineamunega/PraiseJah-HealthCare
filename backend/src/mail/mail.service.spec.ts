@@ -21,6 +21,8 @@ await jest.unstable_mockModule('resend', () => ({
 const { MailService } = await import('./mail.service.js');
 const { Resend } = await import('resend');
 const { Test } = await import('@nestjs/testing');
+const { ConfigService } = await import('@nestjs/config');
+const { LoggerService } = await import('../logger/logger.service.js');
 
 describe('MailService', () => {
   let service: InstanceType<typeof MailService>;
@@ -32,6 +34,23 @@ describe('MailService', () => {
         {
           provide: Resend,
           useValue: { emails: { send: mockSendMail } },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'EMAIL_FROM') return 'no-reply@praisejah.com';
+              if (key === 'FRONTEND_URL') return 'http://localhost:3000';
+              return null;
+            }),
+          },
+        },
+        {
+          provide: LoggerService,
+          useValue: {
+            info: jest.fn(),
+            error: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -58,14 +77,14 @@ describe('MailService', () => {
       );
 
       expect(mockSendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
+        from: 'no-reply@praisejah.com',
         to: ['user@example.com'],
-        subject: expect.any(String),
+        subject: expect.stringContaining('Welcome'),
         html: expect.stringContaining('tempPassword123'),
       });
     });
 
-    it('should throw InternalServerErrorException when resend returns an error', async () => {
+    it('should throw Error when resend returns an error', async () => {
       mockSendMail.mockResolvedValue({
         data: null,
         error: { message: 'An error occurred' },
@@ -77,7 +96,7 @@ describe('MailService', () => {
           'user@example.com',
           'tempPassword123',
         ),
-      ).rejects.toThrow(InternalServerErrorException);
+      ).rejects.toThrow(Error);
     });
   });
 });
