@@ -13,4 +13,4 @@ import { AuditModule } from '../audit/audit.module.js';
   imports: [PrismaModule, WelcomeMailModule, LoggerModule, AuditModule],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "migrate:dev": "prisma migrate dev && prisma generate",
+    "generate": "prisma generate",
     "migrate:prod": "prisma migrate deploy",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
