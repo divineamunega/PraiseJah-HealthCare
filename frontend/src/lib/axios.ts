@@ -5,7 +5,7 @@ import {
 } from "@/features/auth/utils/token.util";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_URL || "/api/v1",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -45,7 +45,7 @@ api.interceptors.response.use(
 
       if (!refreshPromise) {
         refreshPromise = axios
-          .post("/api/auth/refresh", null, { withCredentials: true })
+          .post(`${import.meta.env.VITE_API_URL || "/api/v1"}/auth/refresh`, null, { withCredentials: true })
           .then((res) => {
             const data = res.data?.data ?? res.data;
             setAccessToken(data.accessToken);

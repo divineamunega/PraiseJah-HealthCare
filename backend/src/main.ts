@@ -21,6 +21,11 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || '*',
+    credentials: true,
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -36,6 +41,8 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new AllExceptionsFilter(logger));
 
+  app.setGlobalPrefix('api/v1');
+
   // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('PraiseJah HealthCare API')
@@ -46,7 +53,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }

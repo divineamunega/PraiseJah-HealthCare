@@ -2,8 +2,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://your-railway-url.railway.app/api/:path*"
+      "source": "/api/v1/:path*",
+      "destination": "https://praisejah-healthcare.onrender.com/api/v1/:path*"
     },
     {
       "source": "/(.*)",
