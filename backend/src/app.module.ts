@@ -29,8 +29,9 @@ configDotenv();
     MailModule,
     BullModule.forRoot({
       connection: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT!),
+        host: process.env.REDIS_HOST?.trim(),
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD?.trim(),
       },
     }),
     ConfigModule.forRoot({ isGlobal: true }),
