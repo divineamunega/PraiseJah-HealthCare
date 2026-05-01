@@ -14,7 +14,6 @@ import RolePermissions from "@/features/admin/pages/RolePermissions";
 import DoctorDashboard from "@/features/clinical/pages/DoctorDashboard";
 import EncounterWorkstation from "@/features/clinical/pages/EncounterWorkstation";
 import NurseDashboard from "@/features/clinical/pages/NurseDashboard";
-import LabDashboard from "@/features/clinical/pages/LabDashboard";
 import SecretaryDashboard from "@/features/clinical/pages/SecretaryDashboard";
 import PharmacyDashboard from "@/features/clinical/pages/PharmacyDashboard";
 import PatientListPage from "@/features/clinical/pages/PatientListPage";

@@ -22,7 +22,7 @@ const formatKeyLabel = (key: string) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const formatResultValue = (value: ResultValue | unknown) => {
+const formatResultValue = (value: ResultValue | unknown): string => {
   if (value === null || value === undefined) return "—";
 
   if (typeof value === "string") {
@@ -39,8 +39,8 @@ const formatResultValue = (value: ResultValue | unknown) => {
   }
 
   if (Array.isArray(value)) {
-    const joined = value
-      .map((item) => formatResultValue(item))
+    const joined: string = value
+      .map((item: unknown): string => formatResultValue(item))
       .filter((item) => item !== "—")
       .join(", ");
 
@@ -48,9 +48,9 @@ const formatResultValue = (value: ResultValue | unknown) => {
   }
 
   if (isResultsRecord(value)) {
-    const flattened = Object.entries(value)
-      .map(([key, nestedValue]) => {
-        const nestedDisplay = formatResultValue(nestedValue);
+    const flattened: string = Object.entries(value)
+      .map(([key, nestedValue]): string | null => {
+        const nestedDisplay: string = formatResultValue(nestedValue);
         return nestedDisplay === "—" ? null : `${formatKeyLabel(key)}: ${nestedDisplay}`;
       })
       .filter((entry): entry is string => !!entry)

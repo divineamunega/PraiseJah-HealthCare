@@ -10,7 +10,6 @@ import {
   Microscope,
   Clock,
   ExternalLink,
-  Shield,
   Loader2,
   RefreshCw,
 } from "lucide-react";
