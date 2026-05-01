@@ -143,10 +143,11 @@ export class AuthController {
       await this.authService.logout(refreshToken, req['correlationId']);
     }
 
+    const isProduction = process.env.NODE_ENV === 'production';
     res.clearCookie('refresh_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
 
     return { message: 'Logged out successfully' };
