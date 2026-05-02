@@ -8,9 +8,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const frontendUrl = process.env.FRONTEND_URL;
+
 @WebSocketGateway({
   cors: {
-    origin: '*', // In production, replace with your frontend URL
+    origin: frontendUrl ? frontendUrl.split(',') : '*',
+    credentials: true,
   },
   namespace: 'clinical',
 })

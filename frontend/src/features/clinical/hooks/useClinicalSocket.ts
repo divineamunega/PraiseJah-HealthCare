@@ -13,8 +13,9 @@ export const useClinicalSocket = () => {
   useEffect(() => {
     // Only initialize socket if it doesn't exist
     if (!socket) {
-      // Connecting to the clinical namespace via the proxied /socket.io path
-      socket = io("/clinical", {
+      const wsUrl = import.meta.env.VITE_WS_URL || "";
+      // Connecting to the clinical namespace directly to the WS server
+      socket = io(`${wsUrl}/clinical`, {
         path: "/socket.io",
         transports: ["websocket", "polling"], // Allow polling fallback for better compatibility
         reconnection: true,

@@ -31,3 +31,6 @@ dist-ssr
 .env.local
 .env.prod
 .env.production
+
+# Prisma Seeding
+backend/prisma/seed-prod.ts

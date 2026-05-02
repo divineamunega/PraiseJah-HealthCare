@@ -47,6 +47,9 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Prisma Seeding
+prisma/seed-prod.ts
+
 # Runtime data
 pids
 *.pid
