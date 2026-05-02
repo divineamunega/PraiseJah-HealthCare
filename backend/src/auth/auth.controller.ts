@@ -211,10 +211,11 @@ export class AuthController {
   }
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: ms(this.config.getOrThrow('REFRESH_EXPIRES_IN')),
     });
   }

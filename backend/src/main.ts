@@ -21,10 +21,19 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
+  const frontendUrl = process.env.FRONTEND_URL;
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: frontendUrl ? frontendUrl.split(',') : [],
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
+  
+  if (frontendUrl) {
+    logger.log(`CORS enabled for: ${frontendUrl}`);
+  } else {
+    logger.warn('No FRONTEND_URL found in environment variables. CORS may block requests.');
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({

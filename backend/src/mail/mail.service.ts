@@ -18,6 +18,7 @@ export class MailService {
   ) {}
 
   private getEmailLayout(title: string, contentHtml: string): string {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || '#';
     return `
       <!DOCTYPE html>
       <html>
@@ -39,7 +40,7 @@ export class MailService {
             .wrapper { width: 100%; table-layout: fixed; background-color: ${this.backgroundColor}; padding-bottom: 40px; }
             .container { max-width: 600px; margin: 0 auto; background-color: ${this.cardColor}; border-top: 4px solid ${this.brandColor}; margin-top: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
             .header { padding: 32px 40px; text-align: center; }
-            .logo { font-size: 24px; font-weight: 700; color: ${this.brandColor}; letter-spacing: -0.02em; text-transform: uppercase; }
+            .logo { font-size: 24px; font-weight: 700; color: ${this.brandColor}; letter-spacing: -0.02em; text-transform: uppercase; text-decoration: none; }
             .content { padding: 0 40px 40px 40px; line-height: 1.6; }
             .footer { padding: 32px 40px; text-align: center; color: ${this.mutedColor}; font-size: 14px; }
             .button { 
@@ -72,7 +73,7 @@ export class MailService {
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <div class="logo">PraiseJah HealthCare</div>
+                <a href="${frontendUrl}" class="logo">PraiseJah HealthCare</a>
               </div>
               <div class="content">
                 ${contentHtml}
@@ -90,8 +91,10 @@ export class MailService {
 
   async sendWelcomeEmail(name: string, email: string, tempPassword: string) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
-    if (!fromEmail) {
-      throw new Error('EMAIL_FROM is not configured');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+
+    if (!fromEmail || !frontendUrl) {
+      throw new Error('EMAIL_FROM or FRONTEND_URL is not configured');
     }
 
     const contentHtml = `
@@ -99,7 +102,10 @@ export class MailService {
       <p>Your professional account at PraiseJah HealthCare has been successfully created.</p>
       <p>To get started, please log in with the temporary password provided below. You will be prompted to change it upon your first access.</p>
       <div class="mono-code">${tempPassword}</div>
-      <p>If you have any questions regarding your access or the platform, please contact your department administrator.</p>
+      <div style="text-align: center;">
+        <a href="${frontendUrl}/login" class="button">Login to Platform</a>
+      </div>
+      <p style="margin-top: 24px;">If you have any questions regarding your access or the platform, please contact your department administrator.</p>
     `;
 
     const { error } = await this.resend.emails.send({
