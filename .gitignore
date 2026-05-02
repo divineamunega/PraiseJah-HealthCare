@@ -30,3 +30,4 @@ dist-ssr
 .env.production.local
 .env.local
 .env.prod
+.env.production
