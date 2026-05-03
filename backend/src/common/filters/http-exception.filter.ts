@@ -1,31 +1,27 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import * as NestCommon from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoggerService } from '../../logger/logger.service.js';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 
-@Catch()
-export class AllExceptionsFilter implements ExceptionFilter {
+@NestCommon.Catch()
+export class AllExceptionsFilter implements NestCommon.ExceptionFilter {
   constructor(private readonly logger: LoggerService) {}
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  @SentryExceptionCaptured()
+  catch(exception: unknown, host: NestCommon.ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
     const correlationId = request['correlationId'];
 
     const status =
-      exception instanceof HttpException
+      exception instanceof NestCommon.HttpException
         ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+        : NestCommon.HttpStatus.INTERNAL_SERVER_ERROR;
 
     let message = 'Internal server error';
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof NestCommon.HttpException) {
       const exceptionResponse: any = exception.getResponse();
       message =
         typeof exceptionResponse === 'object'

@@ -29,4 +29,11 @@ export class AppController {
       note: 'All API endpoints are prefixed with /api/v1',
     };
   }
+
+  @Get('debug-sentry')
+  @ApiOperation({ summary: 'Intentionally throw an error to test Sentry' })
+  @ApiResponse({ status: 500, description: 'Throws a test error' })
+  getError() {
+    throw new Error('My first Sentry error!');
+  }
 }

@@ -1,3 +1,4 @@
+import './instrument.js';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
@@ -28,11 +29,13 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',
   });
-  
+
   if (frontendUrl) {
     logger.log(`CORS enabled for: ${frontendUrl}`);
   } else {
-    logger.warn('No FRONTEND_URL found in environment variables. CORS may block requests.');
+    logger.warn(
+      'No FRONTEND_URL found in environment variables. CORS may block requests.',
+    );
   }
 
   app.useGlobalPipes(

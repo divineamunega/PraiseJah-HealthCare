@@ -8,7 +8,9 @@ import { MailModule } from './mail/mail.module.js';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { configDotenv } from 'dotenv';
-import { RouterModule } from '@nestjs/core';
+import { APP_FILTER } from '@nestjs/core';
+import { SentryModule } from "@sentry/nestjs/setup";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { AuthModule } from './auth/auth.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
@@ -23,6 +25,7 @@ configDotenv();
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     PrismaModule,
     LoggerModule,
     UsersModule,
@@ -45,7 +48,13 @@ configDotenv();
     PrescriptionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
