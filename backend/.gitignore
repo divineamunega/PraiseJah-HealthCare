@@ -47,6 +47,9 @@ lerna-debug.log*
 .temp
 .tmp
 
+# TypeScript Build Cache
+*.tsbuildinfo
+
 # Prisma Seeding
 prisma/seed-prod.ts
 
