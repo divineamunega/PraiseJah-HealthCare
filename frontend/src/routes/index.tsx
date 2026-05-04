@@ -20,6 +20,7 @@ const EncounterWorkstation = lazy(() => import("@/features/clinical/pages/Encoun
 const NurseDashboard = lazy(() => import("@/features/clinical/pages/NurseDashboard"));
 const SecretaryDashboard = lazy(() => import("@/features/clinical/pages/SecretaryDashboard"));
 const PharmacyDashboard = lazy(() => import("@/features/clinical/pages/PharmacyDashboard"));
+const LabDashboard = lazy(() => import("@/features/clinical/pages/LabDashboard"));
 const PatientListPage = lazy(() => import("@/features/clinical/pages/PatientListPage"));
 const PatientProfilePage = lazy(() => import("@/features/clinical/pages/PatientProfilePage"));
 
@@ -206,6 +207,16 @@ const AppRoutes = () => {
             element={
               <RoleGuard path="/nurse/patients">
                 <PatientProfilePage />
+              </RoleGuard>
+            }
+          />
+
+          {/* Lab Routes */}
+          <Route
+            path="lab"
+            element={
+              <RoleGuard path="/lab">
+                <LabDashboard />
               </RoleGuard>
             }
           />
