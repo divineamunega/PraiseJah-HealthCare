@@ -91,21 +91,47 @@
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployment (VM / Production)
 
-### Backend (Render / Railway)
-The backend is configured for "Managed Native" hosting.
-- **Entry point:** `backend/src/main.ts`
-- **Build Command:** `pnpm run build`
-- **Start Command:** `pnpm run start:prod` (Automatically handles `prisma migrate deploy`)
-- **API Prefix:** `/api/v1`
-- **Health Check:** `/api/v1/health`
+The project is optimized for deployment on a VM (Ubuntu/Debian) using Docker Compose and Nginx as a reverse proxy.
 
-### Frontend (Vercel)
-The frontend uses a Proxy Rewrite to maintain a single-domain experience.
-- **Output Directory:** `dist`
-- **Build Command:** `pnpm run build`
-- **Config:** Managed via `frontend/vercel.json` to route `/api/v1/*` to the backend.
+### 1. Preparation
+- Ensure **Docker** and **Docker Compose** are installed on your VM.
+- Allow traffic on **Port 80** (HTTP) in your firewall settings.
+
+### 2. Deployment Steps
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/PraiseJah-HealthCare.git
+   cd PraiseJah-HealthCare
+   ```
+
+2. **Configure Environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your production secrets, IP/Domain, and database credentials
+   nano .env
+   ```
+
+3. **Launch the Stack:**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+4. **Seed the Database:**
+   Once the containers are running, populate the database with the initial admin user and sample data:
+   ```bash
+   docker-compose exec backend pnpm run seed
+   ```
+   **Default Credentials:**
+   - **Email:** `admin@praisejah.com`
+   - **Password:** `Password123!`
+
+### 3. Why this works (The "Magic")
+- **Unified Gateway:** Nginx serves the frontend and proxies `/api/v1` to the backend internally.
+- **Zero CORS:** Since everything is on Port 80, no cross-origin configuration is required.
+- **Auto-Migrations:** The backend container automatically runs Prisma migrations on startup.
+- **Health Checks:** The backend waits for Postgres and Redis to be fully healthy before starting.
 
 ---
 

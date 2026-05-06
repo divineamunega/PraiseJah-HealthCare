@@ -10,6 +10,8 @@ RUN pnpm install
 
 COPY . .
 
+RUN pnpm generate
+
 RUN pnpm build
 
 EXPOSE 3000

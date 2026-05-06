@@ -54,3 +54,5 @@ docker-compose.yml
 # Other
 README.md
 vercel.json
+# TypeScript Build Cache
+*.tsbuildinfo
