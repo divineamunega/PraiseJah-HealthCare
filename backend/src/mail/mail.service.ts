@@ -18,7 +18,8 @@ export class MailService {
   ) {}
 
   private getEmailLayout(title: string, contentHtml: string): string {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || '#';
+    const rawFrontendUrl = this.configService.get<string>('FRONTEND_URL') || '#';
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
     return `
       <!DOCTYPE html>
       <html>
@@ -91,11 +92,13 @@ export class MailService {
 
   async sendWelcomeEmail(name: string, email: string, tempPassword: string) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const rawFrontendUrl = this.configService.get<string>('FRONTEND_URL');
 
-    if (!fromEmail || !frontendUrl) {
+    if (!fromEmail || !rawFrontendUrl) {
       throw new Error('EMAIL_FROM or FRONTEND_URL is not configured');
     }
+
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
 
     const contentHtml = `
       <h1>Welcome to the Team, ${name.split(' ')[0]}!</h1>
@@ -127,12 +130,13 @@ export class MailService {
     resetToken: string,
   ) {
     const fromEmail = this.configService.get<string>('EMAIL_FROM');
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const rawFrontendUrl = this.configService.get<string>('FRONTEND_URL');
 
-    if (!fromEmail || !frontendUrl) {
+    if (!fromEmail || !rawFrontendUrl) {
       throw new Error('EMAIL_FROM or FRONTEND_URL is not configured');
     }
 
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
     const contentHtml = `

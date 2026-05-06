@@ -34,3 +34,4 @@ dist-ssr
 
 # Prisma Seeding
 backend/prisma/seed-prod.ts
+VM_SSL_SETUP.md
