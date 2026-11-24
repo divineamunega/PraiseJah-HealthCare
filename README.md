@@ -14,7 +14,7 @@
 - **Prescription Suite:** Medication management with dosage and frequency controls.
 
 ### 🔐 Security & Governance
-- **Audit Vault:** Comprehensive HIPAA-compliant audit logs tracking every clinical and administrative action.
+- **Audit Vault:** Audit logs of every clinical and administrative action, designed with HIPAA audit-trail requirements in mind.
 - **RBAC (Role-Based Access Control):** Granular permissions for Super Admins, Doctors, Nurses, Secretaries, and Lab Scientists.
 - **Session Security:** Hashed refresh tokens, IP tracking, and secure password management.
 
@@ -55,7 +55,7 @@
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/PraiseJah-HealthCare.git
+   git clone https://github.com/divineamunega/PraiseJah-HealthCare.git
    cd PraiseJah-HealthCare
    ```
 
@@ -102,7 +102,7 @@ The project is optimized for deployment on a VM (Ubuntu/Debian) using Docker Com
 ### 2. Deployment Steps
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/PraiseJah-HealthCare.git
+   git clone https://github.com/divineamunega/PraiseJah-HealthCare.git
    cd PraiseJah-HealthCare
    ```
 
@@ -119,13 +119,11 @@ The project is optimized for deployment on a VM (Ubuntu/Debian) using Docker Com
    ```
 
 4. **Seed the Database:**
-   Once the containers are running, populate the database with the initial admin user and sample data:
+   Set `SEED_PASSWORD` in `.env` to a strong, unique value first. The seed creates a super admin and one demo account per role, and it refuses to run in production with the default password. Then populate the database:
    ```bash
    docker-compose exec backend pnpm run seed
    ```
-   **Default Credentials:**
-   - **Email:** `admin@praisejah.com`
-   - **Password:** `Password123!`
+   Change the super admin password after first login, and remove the demo accounts before real use.
 
 ### 3. Why this works (The "Magic")
 - **Unified Gateway:** Nginx serves the frontend and proxies `/api/v1` to the backend internally.

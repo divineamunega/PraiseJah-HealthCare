@@ -7,8 +7,23 @@ const connectionString = `${process.env.DATABASE_URL}`;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
+const DEFAULT_DEMO_PASSWORD = 'Password123!';
+
 async function main() {
-  const demoPassword = 'Password123!';
+  const demoPassword = process.env.SEED_PASSWORD || DEFAULT_DEMO_PASSWORD;
+
+  // The seed creates a SUPER_ADMIN and one account per role. Never let it put
+  // a publicly known password on a production database.
+  if (
+    process.env.NODE_ENV === 'production' &&
+    demoPassword === DEFAULT_DEMO_PASSWORD
+  ) {
+    throw new Error(
+      'Refusing to seed production with the default demo password. ' +
+        'Set SEED_PASSWORD in .env to a strong, unique value.',
+    );
+  }
+
   const passwordHash = await bcrypt.hash(demoPassword, 10);
 
   console.log('--- SEEDING USERS ---');
